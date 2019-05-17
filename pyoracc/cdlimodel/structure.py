@@ -77,7 +77,7 @@ ${child.serialize()}
         faceSurfaceList = filter(faceSurfaceRegex.match, self.surfaceList)
         sealList = filter(sealRegex.match, self.surfaceList)
 
-        print(self.objectType)
+        # print(self.objectType)
 
         if len(faceSurfaceList) > 0:
             self.errorText += "%s: General Warning: Surface Type: face is not supported anymore.\n" % self.pnumber

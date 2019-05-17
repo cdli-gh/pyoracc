@@ -16,6 +16,7 @@ class Segmentor:
                                       os.path.basename(self.inputFileName)+OUTPUT_FOLDER)
         self.verbose = verbose
         self.__reset__()
+        self.col_map={}
 
     def __reset__(self):
         self.outputFilename = ''
@@ -51,6 +52,7 @@ class Segmentor:
                 self.write2file()
             self.__reset__()
             firstword = tokenizedLine[0].lstrip("&")
+            self.col_map[firstword]=linenumber
             self.outputFilename = firstword
         self.lines.append(line)
 

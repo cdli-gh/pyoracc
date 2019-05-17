@@ -80,11 +80,21 @@ To disable segmentation (will be slow) and to run on whole, use switch -w/--whol
 To see the console messages of the tool, use --verbose switch
 
     $ pyoracc -i ./pyoracc/test/data -f cdli --verbose
+
+To output a summary, run parser without -w/--whole and use -s/--summary
+
+    $ pyoracc -i ./pyoracc/test/data/cdli_atf_20180104.atf -f cdli -s [summary path]
     
 Note that using the verbose option will also create a parselog.txt file, 
 containing the log output along with displaying it on command line. 
 The verbose output contains the lexical symbols, the parse grammer table
 and the LR parsing table states.
+
+Note that, if you parse a file contains mutiple ATF records under whole 
+mode, the parser will stop whenever it meets a error and raise the info. 
+If you want to see a summary of the whole file, you need to run without
+-w/--whole. You may also use the -s/--summary to specify the output path
+the summary when you run without -w/--whole.
 
 Also note that, first time usage with any atf format will always display 
 the parse tables irrespective of verbose switch.
@@ -103,6 +113,7 @@ Options:
   -i, --input_path PATH      Input the file/folder name.  [required]
   -f, --atf_type [cdli|atf]  Input the atf file type.  [required]
   -v, --verbose              Enables verbose mode
+  -s, --summary              Input the summary path, only useful when run without -w/--whole
   --version                  Show the version and exit.
   --help                     Show this message and exit.
 

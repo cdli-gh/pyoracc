@@ -25,9 +25,11 @@ import re
 import warnings
 from pyoracc import _pyversion
 from pyoracc.atf.common.atflexicon import AtfLexicon
-
+from pyoracc.tools.logtemplate import LogTemplate
+from pyoracc.tools.grammar_check import GrammarCheck
 
 class AtfLexer(object):
+
 
     def _keyword_dict(self, tokens, extra):
         keywords = {token.lower(): token for token in tokens}
@@ -80,8 +82,9 @@ class AtfLexer(object):
     t_TO = "\>\>"
     t_COMMA = "\,"
     t_PARBAR = "\|\|"
-
     t_INITIAL_transctrl_PARENTHETICALID = "\([^\n\r]*\)"
+
+    
 
     def t_INITIAL_transctrl_WHITESPACE(self, t):
         r'[\t ]+'
@@ -118,6 +121,7 @@ class AtfLexer(object):
     def t_NEWLINE(self, t):
         r'\s*[\n\r]'
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         return t
 
     def t_INITIAL_parallel_labeled_ATID(self, t):
@@ -140,7 +144,7 @@ class AtfLexer(object):
             t.lexer.push_state('nonequals')
 
         if t.type == "END":
-            if not self.skipinvalid or t.lexer.current_state() != 'INITIAL':
+            if not self.skip or t.lexer.current_state() != 'INITIAL':
                 t.lexer.pop_state()
             t.lexer.push_state('transctrl')
 
@@ -157,17 +161,20 @@ class AtfLexer(object):
         if t.type in AtfLexer.long_argument_structures + ["NOTE"]:
             t.lexer.push_state('flagged')
         if t.type is None:
-            formatstring = u"Illegal @STRING '{}'".format(t.value)
-            valuestring = t.value
-            if _pyversion() == 2:
-                formatstring = formatstring.encode('UTF-8')
-                valuestring = valuestring.encode('UTF-8')
-            if self.skipinvalid:
-                warnings.warn(formatstring, UserWarning)
+            wrong_value=''
+            for value in t.value:
+                if value.isspace():
+                    break
+                wrong_value += value
+            if self.skip:
+                t.lexer.skip(1)
+                self.g_check.add_lex_error(wrong_value,t.lineno,t.lexpos)
+                self.errors.append((wrong_value, t.lineno, t.lexpos-self.cur_pos))
                 return
             else:
-                raise SyntaxError(formatstring,
-                                  (None, t.lineno, t.lexpos, valuestring))
+                raise SyntaxError(
+                        self.log_tmp.lex_default(wrong_value, 
+                                                t.lineno, t.lexpos-self.cur_pos))
         return t
 
     def t_labeled_OPENR(self, t):
@@ -199,17 +206,21 @@ class AtfLexer(object):
         if t.type == "NOTE":
             t.lexer.push_state('para')
         if t.type is None:
-            formatstring = u"Illegal #STRING '{}'".format(t.value)
-            valuestring = t.value
-            if _pyversion() == 2:
-                formatstring = formatstring.encode('UTF-8')
-                valuestring = valuestring.encode('UTF-8')
-            if self.skipinvalid:
-                warnings.warn(formatstring, UserWarning)
+            t.lexer.lineno += t.value.count("\n")
+            wrong_value=''
+            for value in t.value:
+                if value.isspace():
+                    break
+                wrong_value += value
+            if self.skip:
+                t.lexer.skip(1)
+                self.g_check.add_lex_error(wrong_value,t.lineno,t.lexpos)
+                self.errors.append((wrong_value, t.lineno, t.lexpos-self.cur_pos))
                 return
             else:
-                raise SyntaxError(formatstring,
-                                  (None, t.lineno, t.lexpos, valuestring))
+                raise SyntaxError(
+                        self.log_tmp.lex_default(wrong_value, 
+                                                t.lineno, t.lexpos-self.cur_pos))
         return t
 
     def t_LINELABEL(self, t):
@@ -258,6 +269,7 @@ class AtfLexer(object):
     def t_flagged_text_lemmatize_transctrl_nonequals_absorb_NEWLINE(self, t):
         r'[\n\r]*\s*[\n\r]+'
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         t.lexer.pop_state()
         return t
 
@@ -327,6 +339,7 @@ class AtfLexer(object):
     def t_parallel_NEWLINE(self, t):
         r'\s*[\n\r](?![ \t])'
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         return t
 
     # In interlinear states, a newline which is not continuation leaves state
@@ -334,6 +347,7 @@ class AtfLexer(object):
     def t_interlinear_NEWLINE(self, t):
         r'\s*[\n\r](?![ \t])'
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         t.lexer.pop_state()
         return t
 
@@ -342,6 +356,7 @@ class AtfLexer(object):
     def t_labeled_NEWLINE(self, t):
         r'\s*[\n\r]'
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         return t
 
     # Flag characters (#! etc ) don't apply in translations
@@ -415,6 +430,7 @@ class AtfLexer(object):
                terminates_para + ')))+')
     def t_para_ID(self, t):
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         t.value = t.value.strip()
         return t
 
@@ -422,6 +438,7 @@ class AtfLexer(object):
     def t_para_NEWLINE(self, t):
         r'\r?\n\s*[\n\r]*\n'
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         t.lexer.pop_state()
         return t
 
@@ -434,6 +451,7 @@ class AtfLexer(object):
     @lex.TOKEN(r'\r?\n(?=' + terminates_para + ')')
     def t_para_MAGICNEWLINE(self, t):
         t.lexer.lineno += t.value.count("\n")
+        self.cur_pos = t.lexpos
         t.lexer.pop_state()
         t.type = "NEWLINE"
         return t
@@ -467,22 +485,27 @@ class AtfLexer(object):
 
     # Error handling rule
     def t_ANY_error(self, t):
-        fstring = u"PyOracc got an illegal character " \
-                  u"'{}' at line number '{}' at lex pos '{}'" \
-            .format(t.value, t.lineno, t.lexpos)
-        valuestring = t.value
-        if _pyversion() == 2:
-            fstring = fstring.encode('UTF-8')
-            valuestring = valuestring.encode('UTF-8')
-        if self.skipinvalid:
+        wrong_value=''
+        for value in t.value:
+            if value.isspace():
+                break
+            wrong_value += value
+        # print(t.value)
+        if self.skip:
             t.lexer.skip(1)
-            warnings.warn(fstring, UserWarning)
+            self.g_check.add_lex_error(wrong_value,t.lineno,t.lexpos)
+            self.errors.append((wrong_value, t.lineno, t.lexpos-self.cur_pos))
             return
         else:
-            raise SyntaxError(fstring,
-                              (None, t.lineno, t.lexpos, valuestring))
+            raise SyntaxError(
+                self.log_tmp.lex_default(wrong_value, 
+                                                t.lineno, t.lexpos-self.cur_pos))
 
-    def __init__(self, skipinvalid=False, debug=0, log=lex.NullLogger()):
-        self.skipinvalid = skipinvalid
+    def __init__(self, skip=False, debug=0, log=lex.NullLogger(),g_check=None):
+        self.skip = skip
+        self.errors = [] #error list
+        self.g_check = g_check
+        self.log_tmp = LogTemplate()
         self.lexer = lex.lex(module=self, reflags=re.MULTILINE, debug=debug,
                              debuglog=log)
+        self.cur_pos = 0
