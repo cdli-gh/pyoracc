@@ -20,8 +20,8 @@ class AtfCDLIParser(AtfParser):
     tokens = AtfParser.tokens
     precedence = AtfParser.precedence
 
-    def __init__(self, debug,skip, log,orig_input):
-        super(AtfCDLIParser, self).__init__(debug, skip,log,orig_input)
+    def __init__(self, debug,skip, log,g_check):
+        super(AtfCDLIParser, self).__init__(debug, skip,log,g_check)
 
     def p_document(self, p):
         """document : text

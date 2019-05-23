@@ -169,7 +169,6 @@ class AtfLexer(object):
             if self.skip:
                 t.lexer.skip(1)
                 self.g_check.add_lex_error(wrong_value,t.lineno,t.lexpos)
-                self.errors.append((wrong_value, t.lineno, t.lexpos-self.cur_pos))
                 return
             else:
                 raise SyntaxError(
@@ -215,12 +214,10 @@ class AtfLexer(object):
             if self.skip:
                 t.lexer.skip(1)
                 self.g_check.add_lex_error(wrong_value,t.lineno,t.lexpos)
-                self.errors.append((wrong_value, t.lineno, t.lexpos-self.cur_pos))
                 return
             else:
                 raise SyntaxError(
-                        self.log_tmp.lex_default(wrong_value, 
-                                                t.lineno, t.lexpos-self.cur_pos))
+                        self.log_tmp.lex_default(wrong_value,t.lineno, t.lexpos-self.cur_pos))
         return t
 
     def t_LINELABEL(self, t):
@@ -494,7 +491,6 @@ class AtfLexer(object):
         if self.skip:
             t.lexer.skip(1)
             self.g_check.add_lex_error(wrong_value,t.lineno,t.lexpos)
-            self.errors.append((wrong_value, t.lineno, t.lexpos-self.cur_pos))
             return
         else:
             raise SyntaxError(
@@ -503,7 +499,6 @@ class AtfLexer(object):
 
     def __init__(self, skip=False, debug=0, log=lex.NullLogger(),g_check=None):
         self.skip = skip
-        self.errors = [] #error list
         self.g_check = g_check
         self.log_tmp = LogTemplate()
         self.lexer = lex.lex(module=self, reflags=re.MULTILINE, debug=debug,

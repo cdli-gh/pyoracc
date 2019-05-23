@@ -37,19 +37,18 @@ from pyoracc.model.state import State
 from pyoracc.model.text import Text
 from pyoracc.model.translation import Translation
 from pyoracc.tools.logtemplate import LogTemplate
-from pyoracc.tools.grammar_check import GrammarCheck
+
 class AtfParser(object):
     tokens = AtfLexicon.TOKENS
 
-    def __init__(self, debug=0, skip=False, log=yacc.NullLogger(),orig_input=''):
+    def __init__(self, debug=0, skip=False, log=yacc.NullLogger(),g_check=None):
         self.skip=skip
-        self.errors=[] #error list
         self.parser = yacc.yacc(module=self, tabmodule='pyoracc.atf.parsetab',
                                 debug=debug, debuglog=log)
         self.log_tmp=LogTemplate()
         self.cur_pos=0
-        self.g_check=GrammarCheck(orig_input)
-        self.debug_mode=True
+        self.g_check = g_check
+        self.debug_mode=False
         self.detail_debug=False
 
     def p_codeline(self, p):
@@ -411,7 +410,7 @@ class AtfParser(object):
 
     def p_linelabel(self, p):
         "line_sequence : LINELABEL ID"
-        self.g_check.add_trans(str(p[1]),p.lineno(1))
+        self.g_check.add_trans(p[1],p.lineno(1))
         if self.debug_mode:
             print('p_linelabel')
             if self.detail_debug: 
@@ -1147,7 +1146,6 @@ class AtfParser(object):
         # wrong_value=p.value[0]
         if self.skip:
             self.g_check.add_yacc_error(wrong_value,p.lineno,p.lexpos)
-            self.errors.append((wrong_value,p.lineno, p.lexpos-self.cur_pos, p.type))
             while True:
                 tok = self.parser.token() # Get the next token  
                 if not tok or tok.type == 'NEWLINE': 

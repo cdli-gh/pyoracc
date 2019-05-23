@@ -28,6 +28,7 @@ from pyoracc.atf.common.atfyacc import AtfParser
 from pyoracc.atf.oracc.atflex import AtfOraccLexer
 from pyoracc.atf.oracc.atfyacc import AtfOraccParser
 from mako.template import Template
+from pyoracc.tools.grammar_check import GrammarCheck
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -44,27 +45,30 @@ log.addHandler(consoleHandler)
 
 class AtfFile(object):
     template = Template("${text.serialize()}")
-    def __init__(self, content, atftype='oracc', debug=False,skip=False):
+    def __init__(self, content, atftype='oracc', debug=False,skip=False,atf_id=0):
+        g_check = GrammarCheck(content,atf_id)
         if content[-1] != '\n':
             content += "\n"
         if atftype == 'cdli':
-            atfparser=AtfCDLIParser(debug=debug, skip=skip,log=log,orig_input=content)
-            atflexer=AtfCDLILexer(debug=debug, skip=skip,log=log,g_check=atfparser.g_check)
+            atfparser=AtfCDLIParser(debug=debug,skip=skip,log=log,g_check=g_check)
+            atflexer=AtfCDLILexer(debug=debug, skip=skip,log=log,g_check=g_check)
         elif atftype == 'oracc':
-            atfparser=AtfOraccParser(debug=debug, skip=skip,log=log,orig_input=content) 
-            atflexer=AtfOraccLexer(debug=debug, skip=skip,log=log,g_check=atfparser.g_check)
+            atfparser=AtfOraccParser(debug=debug, skip=skip,log=log,g_check=g_check) 
+            atflexer=AtfOraccLexer(debug=debug, skip=skip,log=log,g_check=g_check)
         else:
-            atfparser=AtfParser(debug=debug, skip=skip,log=log,orig_input=content) 
-            atflexer=AtfLexer(debug=debug, skip=skip,log=log,g_check=atfparser.g_check)
+            atfparser=AtfParser(debug=debug, skip=skip,log=log,g_check=g_check) 
+            atflexer=AtfLexer(debug=debug, skip=skip,log=log,g_check=g_check)
         lexer = atflexer.lexer
         parser = atfparser.parser
-        self.errors_lex=atflexer.errors 
-        self.errors_yacc=atfparser.errors
+        # self.errors_lex=atflexer.errors 
+        # self.errors_yacc=atfparser.errors
         if debug:
             self.text = parser.parse(content, lexer=lexer, debug=log)
         else:
             self.text = parser.parse(content, lexer=lexer)
-        print(atfparser.g_check.print_test())
+        # atfparser.g_check.print_test()
+        g_check.check()
+        self.errors = g_check.errors
 
     def __str__(self):
         return AtfFile.template.render_unicode(**vars(self))
@@ -73,13 +77,12 @@ class AtfFile(object):
         return AtfFile.template.render_unicode(**vars(self))
 
 
-def check_atf(infile, atftype, verbose=False,skip=False):
-    content = codecs.open(infile,
-                          encoding='utf-8-sig').read()
-    atffile=AtfFile(content, atftype, verbose,skip)
-    errors_lex=atffile.errors_lex
-    errors_yacc=atffile.errors_yacc
-    return errors_lex,errors_yacc
+def check_atf(infile, atftype, verbose=False,skip=False,atf_id=0):
+    content = codecs.open(infile,encoding='utf-8-sig').read()
+    atffile=AtfFile(content, atftype, verbose,skip,atf_id)
+    # errors_lex=atffile.errors_lex
+    # errors_yacc=atffile.errors_yacc
+    return atffile.errors
 
 
 if __name__ == "__main__":

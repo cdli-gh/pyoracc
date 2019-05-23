@@ -9,47 +9,43 @@ from pyoracc.wrapper.segment import Segmentor
 
 from pyoracc.atf.common.atffile import check_atf
 from pyoracc.tools.logtemplate import LogTemplate
+from pyoracc.tools.errors_template import ErrorsTemplate
 log_tmp=LogTemplate()
+error_tmp=ErrorsTemplate()
 
 def output_error(error_list, summary, pathname, whole, summary_str,orig_map):
     if len(summary) > 0 and os.path.isdir(summary) and (not whole):
         summary = summary if summary[-1]=='/' else summary+'/'
         file = open(summary+"PyOracc.log", "a+")
         error_idx=0
-        # error:tuple (lex_errors:list, yacc_errors:list, atf_id, segpathname)
+        # error:tuple (errors,atf_id,segpathname)
         for error in error_list:
-            pos_renew=orig_map[error[2]] if (error[2] in orig_map) else 0
-            if ( len(error[0]) + len(error[1]) ) > 0:
-                head_str = log_tmp.head_default(error_idx,error[2],error[3])
+            pos_renew = orig_map[error[1]] if (error[1] in orig_map) else 0
+            if len(error[0])  > 0:
+                head_str = log_tmp.head_default(error_idx,error[1],error[2])
                 click.echo(head_str)
                 file.write(head_str + '\n')
                 error_idx+=1
-            # lex_err: tuple (wrong_value, t.lineno, t.lexpos)
-            for lex_err in error[0]:
-                lex_str = (" "*6 + log_tmp.lex_default(lex_err[0],pos_renew+lex_err[1],lex_err[2]))#.encode('utf-8')
-                click.echo(lex_str)
-                file.write(lex_str + '\n')
-            # yacc_err: tuple (wrong_value,p.lineno, p.lexpos, p.type)
-            for yacc_err in error[1]:
-                yacc_str = (" "*6 + log_tmp.yacc_default(yacc_err[0],pos_renew+yacc_err[1],yacc_err[2],yacc_err[3]))#.encode('utf-8')
-                click.echo(yacc_str)
-                file.write(yacc_str + '\n')
+            # tmp_err:
+            for tmp_err in error[0]:
+                err_str = (" "*(len(str(error_idx))+4) + error_tmp.error2str(pos_renew,tmp_err))
+                click.echo(err_str)
+                file.write(err_str + '\n')
         file.write(summary_str + '\n')
         file.close()
     else:
         error_idx=0
+        # error:tuple (errors,atf_id,segpathname)
         for error in error_list:
-            pos_renew=orig_map[error[2]] if (error[2] in orig_map) else 0
-            if ( len(error[0]) + len(error[1]) ) > 0:
-                head_str = log_tmp.head_default(error_idx,error[2],error[3])
+            pos_renew = orig_map[error[1]] if (error[1] in orig_map) else 0
+            if len(error[0])  > 0:
+                head_str = log_tmp.head_default(error_idx,error[1],error[2])
                 click.echo(head_str)
                 error_idx+=1
-            for lex_err in error[0]:
-                lex_str = " "*6 + log_tmp.lex_default(lex_err[0],pos_renew+lex_err[1],lex_err[2])
-                click.echo(lex_str)
-            for yacc_err in error[1]:
-                yacc_str = " "*6 + log_tmp.yacc_default(yacc_err[0],pos_renew+yacc_err[1],yacc_err[2],yacc_err[3])
-                click.echo(yacc_str)
+            # tmp_err:
+            for tmp_err in error[0]:
+                err_str = (" "*6 + error_tmp.error2str(pos_renew,tmp_err))
+                click.echo(err_str)
         if not os.path.isdir(summary) and (not whole):
             click.echo(log_tmp.wrong_path(summary))
     click.echo(summary_str)
@@ -57,9 +53,10 @@ def output_error(error_list, summary, pathname, whole, summary_str,orig_map):
 
 def check_atf_message((segpathname, atftype, verbose,skip)): # this tuple parameters format no longer support in python3
     # click.echo('\n Info: Parsing {0}.'.format(segpathname))
-    errors_lex,errors_yacc = check_atf(segpathname, atftype, verbose,skip)
-    atf_id = (segpathname.split('/')[-1]).split('.')[0] # extract atf_id(e.g. P136211) 
-    return (errors_lex,errors_yacc,atf_id,segpathname)
+    atf_id = (segpathname.split('/')[-1]).split('.')[0]# extract atf_id(e.g. P136211) 
+    # print(atf_id)
+    errors= check_atf(segpathname, atftype, verbose,skip,atf_id)
+    return (errors,atf_id,segpathname)
 
 
 def check_and_process(pathname,summary,atftype, whole, verbose=False):
@@ -70,9 +67,10 @@ def check_and_process(pathname,summary,atftype, whole, verbose=False):
         if verbose:
             click.echo('Info: Parsing {0}.'.format(pathname))
         try:
+            segmentor = Segmentor(pathname, verbose)
             if not whole:
                 pool = Pool()
-                segmentor = Segmentor(pathname, verbose)
+                # segmentor = Segmentor(pathname, verbose)
                 outfolder = segmentor.convert()
                 if verbose:
                     click.echo('Info: Segmented into {0}.'.format(outfolder))
@@ -86,14 +84,11 @@ def check_and_process(pathname,summary,atftype, whole, verbose=False):
                 pool.close()
             else:
                 error_list = [check_atf_message((pathname, atftype, verbose,(not whole)))] # get error list
-            # error_list: [(lex_errors:list, yacc_errors:list, atf_id, segpathname)......]
-            # summarize the work
-            lex_error_num, yacc_error_num = 0, 0
+            num_error = 0
             for error in error_list:
-                lex_error_num += len(error[0])
-                yacc_error_num += len(error[1])
-            summary_str=log_tmp.summary_num(lex_error_num,yacc_error_num,pathname)
-            if (lex_error_num + yacc_error_num) == 0:
+                num_error += len(error[0])
+            summary_str = log_tmp.summary_num(num_error,pathname)
+            if num_error == 0:
                 click.echo(summary_str)
             else:
                 output_error(error_list,summary,pathname,whole,summary_str,segmentor.col_map)
