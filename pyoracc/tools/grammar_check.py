@@ -22,19 +22,23 @@ class GrammarCheck(object):
         self.atf_id=atf_id
     ''' strating test section '''
 
-    def print_test(self):
-        self.check()
-        print('----(GrammarCheck----')
-        print(self.ids)
-        print(self.lans)
-        print(self.objs)
-        print(self.surfaces)
-        print(self.trans)
-        print(self.dollars)
-        for i in self.errors:
-            print(et.error2str(0,i))
-        # print(self.orig_input.split('\n'))
-        print('----GrammarCheck)----')
+    # def print_test(self):
+    #     '''
+    #     For debug use only 
+    #     '''
+
+    #     self.check()
+    #     print('----(GrammarCheck----')
+    #     print(self.ids)
+    #     print(self.lans)
+    #     print(self.objs)
+    #     print(self.surfaces)
+    #     print(self.trans)
+    #     print(self.dollars)
+    #     for i in self.errors:
+    #         print(et.error2str(0,i))
+    #     # print(self.orig_input.split('\n'))
+    #     print('----GrammarCheck)----')
     
     ''' ending test section '''
 
@@ -109,8 +113,10 @@ class GrammarCheck(object):
         :params offset: int, the offset (p.lexpos) of the error point in segmented file
         :return: N/A
 
+        error ID. is -2 
+
         find the column no. of the yacc error token by using offset no., and put it into self.errors_yacc
-        yacc default error No. is -1 
+        yacc default error No. is -2 
         '''
         
         column=self.find_column(offset)
@@ -124,6 +130,8 @@ class GrammarCheck(object):
         :params offset: int, the offset (p.lexpos) of the error point in segmented file
         :return: N/A
 
+        error ID. is -1 
+
         find the column no. of the lex error character by using offset no., and put it into self.errors
         yacc default error No. is -1 
         '''
@@ -136,10 +144,23 @@ class GrammarCheck(object):
     ''' starting line check section '''
 
     def find_column(self, offset):
+        '''
+        :params offset: int, the offset (p.lexpos) of the error point in segmented file
+        :return: int, the column number of offset
+
+        find the column no. in orginal input by using the offset no. of the char.
+        '''
         line_start = self.orig_input.rfind('\n', 0, offset) + 1
         return (offset - line_start) + 1
 
     def line_ascii_test(self,line_n,line):
+        '''
+        :params line_n: int, the line No. of the checking line
+        :params line: str, the line for checking
+        :return: list, [line_n,(column No.,char)], a list whose 0th item is line_n and the rest is the tuple contains column No. and char for non-ascii char
+
+        find if a line contains non-ascii char, and reture the accii char's column No. and char
+        '''
         tmp_pair=[line_n]
         for i in range(len(line)):
             if ord(line[i])>=128:
@@ -147,6 +168,12 @@ class GrammarCheck(object):
         return tmp_pair
 
     def is_nested_bracket(self,line):
+        '''
+        :params line: str, the line for checking
+        :return: bool, if there are nested brackets return True else return False
+
+        find if a line contains nested brackets
+        '''
         stack=[]
         l_brackets={'{','('} #,'<'
         r_brackets={')','}'} # '>',
@@ -163,6 +190,12 @@ class GrammarCheck(object):
         return False
 
     def is_incomplete_bracket(self,line):
+        '''
+        :params line: str, the line for checking
+        :return: bool, if there are incomplete brackets return True else return False
+
+        find if a line contains incomplete brackets
+        '''
         stack=[]
         l_brackets={'{','('}#,'<'
         r_brackets={')','}'}#'>',
@@ -177,6 +210,14 @@ class GrammarCheck(object):
         return (len(stack)>0)
 
     def tranline_nested_bracket_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 10
+
+        find if a trans line contains nested brackets, and put the error into self.errors and put the error line into self.errors_line_set
+        '''
         tmp_lines = []
         for i in self.trans:
             if self.is_nested_bracket(seg_input[i[1]-1]):
@@ -185,9 +226,18 @@ class GrammarCheck(object):
         if len(tmp_lines)>0:
             tmp_err={'err_id':10,'line':tmp_lines}
             self.errors.append(tmp_err)
-            self.errors_line_set=self.errors_line_set.union(set(tmp_lines))
+            self.errors_line_set = self.errors_line_set.union(set(tmp_lines))
 
     def line_incomplete_bracket_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 11
+
+        find if a trans line contains incomplete brackets, and put the error into self.errors and put the error line into self.errors_line_set
+        '''
+
         tmp_lines = []
         for i in range(len(seg_input)-1):
             if self.is_incomplete_bracket(seg_input[i]):
@@ -199,6 +249,15 @@ class GrammarCheck(object):
 
 
     def tranline_ASCII_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 12
+
+        find if a trans line contains non-ASCII char, and put the error into self.errors and put the error line into self.errors_line_set
+        '''
+
         tmp_lcpairs = [] # [org_line, (err_col,err_token)]
         for i in self.trans:
             tmp_lcpair = self.line_ascii_test(i[1],seg_input[i[1]-1]) 
@@ -210,6 +269,15 @@ class GrammarCheck(object):
             self.errors.append(tmp_err)
 
     def tranline_numFollowsign_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 13
+
+        find if all the numbers in the trans line following a sign e.g. 1(asz@c), and put the error into self.errors and put the error line into self.errors_line_set
+        '''
+
         tmp_lines = []
         for i in self.trans:
             line = seg_input[i[1]-1]
@@ -226,6 +294,16 @@ class GrammarCheck(object):
             self.errors.append(tmp_err)
 
     def tranline_start4digits_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 14, 15
+
+        find if all the trans line satrting a number(error 14) and the number is at most 4 digits(error 15),
+        and put the error into self.errors and put the error line into self.errors_line_set
+        '''
+
         tmp_lines1 = []
         tmp_lines2 = []
         for i in self.trans:
@@ -247,6 +325,16 @@ class GrammarCheck(object):
             self.errors.append(tmp_err)
 
     def line_first_sign_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 17
+
+        find if all the lines satrting by one of the &, #, @, $, and number within 4 digits,
+        and put the error into self.errors and put the error line into self.errors_line_set
+        '''
+
         tmp_lines = []
         for i in range(len(seg_input)-1):
             rule = re.match(r'\d+?\'?\.|@|#|&|\$', seg_input[i])
@@ -262,6 +350,13 @@ class GrammarCheck(object):
 
 
     def line_check(self):
+        '''
+        :params N/A
+        :return: N/A
+
+        invoke all the checking on lines
+        '''
+
         seg_input=self.orig_input.split('\n')
         self.tranline_nested_bracket_check(seg_input)
         self.tranline_ASCII_check(seg_input)
@@ -275,6 +370,13 @@ class GrammarCheck(object):
     ''' starting structure check section '''
 
     def structure_IdLanObj_order_check(self):
+        '''
+        :params N/A
+        :return: N/A
+        error ID: 0, 1, 2
+        check the order of ID, Language, and object line.
+        '''
+
         '''check the order of ID, language, and object'''
         if len(self.ids)==1 and len(self.lans)==1 and len(self.objs)==1:
             if self.ids[0]!=1:
@@ -292,6 +394,14 @@ class GrammarCheck(object):
     
 
     def structure_IDLine_check(self):
+        '''
+        :params N/A
+        :return: N/A
+        error ID: 3, 4 
+
+        check if there is only one ID line. (&P010032 = CT 50, 019)
+        '''
+
         '''check ID line'''
         if len(self.ids)<1:
             tmp_err={'err_id':3}
@@ -302,6 +412,14 @@ class GrammarCheck(object):
             self.errors_line_set.add(self.ids[0])
     
     def structure_LanLine_check(self):
+        '''
+        :params N/A
+        :return: N/A
+        error ID: 5, 6 
+        
+        check if there is only one language line. (#atf: lang akk)
+        '''
+
         '''check language line'''
         if len(self.lans)<1:
             tmp_err={'err_id':5}
@@ -312,6 +430,14 @@ class GrammarCheck(object):
             self.errors_line_set.add(self.lans[0])
     
     def structure_ObjLine_check(self):
+        '''
+        :params N/A
+        :return: N/A
+        error ID: 7, 8 
+        
+        check if there is only one obj line. (@tablet)
+        '''
+
         '''check objects line'''
         if len(self.objs)<1:
             tmp_err={'err_id':7}
@@ -322,12 +448,28 @@ class GrammarCheck(object):
             self.errors_line_set.add(self.objs[0])
 
     def structure_dollarOrTrans_check(self):
+        '''
+        :params N/A
+        :return: N/A
+        error ID: 9
+        
+        check if there is at least 1 dollar comment line (e.g. $ blank space) or 1 surface line (e.g. @column 2) with 1 transliterration line (e.g. 1. dub-sar)
+        '''
+
         '''check $comment or transliterration line'''
         if len(self.dollars)<1 and len(self.surfaces)<1 and len(self.trans)<1:
             tmp_err={'err_id':9}
             self.errors.append(tmp_err)
 
     def structure_transSeq_check(self):
+        '''
+        :params N/A
+        :return: N/A
+        error ID: 16
+        
+        check if there is the number of transliterration lines are sequencial
+        '''
+
         '''check surface and transliterration sequence'''
         # print(self.trans)
         # print(self.surfaces)
@@ -368,7 +510,7 @@ class GrammarCheck(object):
         '''
         :return: N/A
 
-        check different rules and append error message to self.error_str
+        invoke all the structure checks
         '''
         self.structure_IdLanObj_order_check()
         self.structure_IDLine_check()
@@ -381,6 +523,12 @@ class GrammarCheck(object):
         
 
     def lex_yacc_check(self):
+        '''
+        :return: N/A
+
+        check whether the line of default errors (lex and yacc) are already in the self.errors, 
+        if not put the default errors into self.errors. 
+        '''
         for i in self.errors_yacc:
             if i['line'] not in self.errors_line_set:
                 self.errors.append(i)
@@ -390,12 +538,18 @@ class GrammarCheck(object):
 
 
     def check(self):
+        '''
+        :return: N/A
+
+        To check the whole data collected during the parsing, use this method. 
+        '''
+
         try:
             self.structure_check()
             self.line_check()
             ''''''
             self.lex_yacc_check() # must be done last
         except:
-            raise SyntaxError('!!!!!!!!!!Grammar_check BUG !!!!!!  '+str(self.atf_id))
+            raise SyntaxError('!!!!!!! grammar_check BUG !!!!!!  '+str(self.atf_id))
 
 

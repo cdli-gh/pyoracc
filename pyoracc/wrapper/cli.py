@@ -4,9 +4,7 @@ import codecs
 import click
 from multiprocessing import Pool
 from stat import ST_MODE, S_ISREG
-
 from pyoracc.wrapper.segment import Segmentor
-
 from pyoracc.atf.common.atffile import check_atf
 from pyoracc.tools.logtemplate import LogTemplate
 from pyoracc.tools.errors_template import ErrorsTemplate
