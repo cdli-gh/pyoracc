@@ -1,3 +1,6 @@
+
+
+
 import re
 from pyoracc.tools.errors_template import ErrorsTemplate
 
@@ -9,7 +12,7 @@ class GrammarCheck(object):
         self.errors_yacc = [] #error list {error_id:int, line:intlist, colmun:intlist, tocken:str}
         self.errors_lex = []
 
-        self.orig_input = orig_input
+        self.orig_input = orig_input.strip()
         
         self.errors_line_set=set()
 
@@ -19,6 +22,9 @@ class GrammarCheck(object):
         self.surfaces = [] # surfarces lines, e.g. @column 2
         self.trans = [] # transliterration lines, e.g. 1. dub-sar
         self.dollars = [] # $ comment lines, e.g. $ blank space 
+        self.links = [] # >>
+        self.sharp_comments= [] # #-comment  
+
         self.atf_id=atf_id
     ''' strating test section '''
 
@@ -88,7 +94,7 @@ class GrammarCheck(object):
 
         add id and line number of transliterration line (e.g. 4. szu nam-ti-la-ni) to the self.trans as a tuple (tran_id,tran_line)
         '''
-        rule = re.match(r'\d+?', tran_id)
+        rule = re.match(r'\d+', tran_id)
         if rule:
             tmp_id=rule.group(0)
         else:
@@ -96,6 +102,16 @@ class GrammarCheck(object):
         # tmp_id=tran_id.replace('\'','')
         # tmp_id=tmp_id.replace('.','')
         self.trans.append((tmp_id,tran_line))
+
+    def add_links(self,link):
+        '''
+        :params link: int, the line of link
+        :return: N/A
+
+        add line number of link line (e.g. >> ) to the self.links
+        '''
+        self.links.append(link)
+
 
     def add_dollars(self,dollar):
         '''
@@ -105,6 +121,16 @@ class GrammarCheck(object):
         add line number of dollar comments line (e.g. $ blank space) to the self.dollars
         '''
         self.dollars.append(dollar)
+
+    def add_sharp_comment(self,sharp):
+        '''
+        :params sharp: int, the line number in segmented file
+        :return: N/A
+
+        add line number of sharp comments line (e.g. $ blank space) to the self.dollars
+        '''
+        self.sharp_comments.append(sharp)
+
 
     def add_yacc_error(self,token,line,offset):
         '''
@@ -275,15 +301,20 @@ class GrammarCheck(object):
 
         error ID: 13
 
-        find if all the numbers in the trans line following a sign e.g. 1(asz@c), and put the error into self.errors and put the error line into self.errors_line_set
+        find if all the numbers in the trans line following a sign e.g. 1(asz@c) or 1/2(asz@c), and put the error into self.errors and put the error line into self.errors_line_set
         '''
 
         tmp_lines = []
         for i in self.trans:
             line = seg_input[i[1]-1]
             # rule1=re.findall( r'\d\(.+?\)', line)
-            rule = re.findall( r'\s\d[^\(]', line)            
-            if len(rule)!= 0:
+            rule1 = re.findall( r'\s\d+\/\d+[^\(]', line)   
+            rule2 = re.findall( r'\s\d+[^\(]', line)
+            rule3 = []
+            for j in rule2:
+                if '/' not in j: 
+                    rule3.append(j)
+            if len(rule3+rule1)!= 0:
                 tmp_lines.append(i[1])
                 self.errors_line_set.add(i[1])
                 # bad_token=(re.findall( r'\d[^\(|^.]', line)+re.findall( r'\d\(.+?[^\(|^.]', line)
@@ -337,7 +368,7 @@ class GrammarCheck(object):
 
         tmp_lines = []
         for i in range(len(seg_input)-1):
-            rule = re.match(r'\d+?\'?\.|@|#|&|\$', seg_input[i])
+            rule = re.match(r'\d+?\'?\.|@|#|&|\>\>|\$', seg_input[i])
             if rule:
                 pass
             else:
@@ -378,19 +409,26 @@ class GrammarCheck(object):
         '''
 
         '''check the order of ID, language, and object'''
+        # print(self.sharp_comments)
         if len(self.ids)==1 and len(self.lans)==1 and len(self.objs)==1:
             if self.ids[0]!=1:
                 tmp_err={'err_id':0,'line':self.ids}
                 self.errors.append(tmp_err)
                 self.errors_line_set.add(self.ids[0])
             if self.lans[0]!=2:
-                tmp_err={'err_id':1,'line':self.lans}
-                self.errors.append(tmp_err)
-                self.errors_line_set.add(self.lans[0])
+                for i in range(self.ids[0]+1,self.lans[0]):
+                    if i not in self.sharp_comments:
+                        tmp_err={'err_id':1,'line':self.lans}
+                        self.errors.append(tmp_err)
+                        self.errors_line_set.add(self.lans[0])
+                        break
             if self.objs[0]!=3:
-                tmp_err={'err_id':2,'line':self.objs}
-                self.errors.append(tmp_err)
-                self.errors_line_set.add(self.objs[0])
+                for i in range(self.lans[0]+1,self.objs[0]):
+                    if i not in self.sharp_comments:
+                        tmp_err={'err_id':2,'line':self.objs}
+                        self.errors.append(tmp_err)
+                        self.errors_line_set.add(self.objs[0])
+                        break
     
 
     def structure_IDLine_check(self):
@@ -442,10 +480,10 @@ class GrammarCheck(object):
         if len(self.objs)<1:
             tmp_err={'err_id':7}
             self.errors.append(tmp_err)
-        elif len(self.objs)>1:
-            tmp_err={'err_id':8,'line':self.objs}
-            self.errors.append(tmp_err)
-            self.errors_line_set.add(self.objs[0])
+        # elif len(self.objs)>1:
+        #     tmp_err={'err_id':8,'line':self.objs}
+        #     self.errors.append(tmp_err)
+        #     self.errors_line_set.add(self.objs[0])
 
     def structure_dollarOrTrans_check(self):
         '''
@@ -484,10 +522,10 @@ class GrammarCheck(object):
             tmp_bound = int(tmp_surfaces[i])
             # print(2)
             tmp_pre = int(self.trans[tmp_start-1][0]) if len(self.trans[tmp_start-1][0])>=1 else 99999
-            # print(3)
+            # print(tmp_pre)
             for j in range(tmp_start,len(self.trans)):
                 curr_id = int(self.trans[j][0]) if len(self.trans[j][0])>=1 else -1
-                # print(4)
+                # print(curr_id)
                 curr_line = int(self.trans[j][1])
                 # print(5)
                 if curr_line >= tmp_bound:
@@ -499,8 +537,20 @@ class GrammarCheck(object):
                 tmp_pre = curr_id
         if len(tmp_lines)>0:
             tmp_err={'err_id':16,'line':tmp_lines}
-            self.errors.append(tmp_err)            
-            
+            self.errors.append(tmp_err)
+
+    def structure_transLinkOrder_check(self):
+        trans_lines = []
+        for i in self.trans:
+            trans_lines.append(i[1])
+        tmp_lines = []
+        for i in range(len(self.links)):
+            if ((self.links[i]-1) not in trans_lines) and ((self.links[i]-1) not in self.sharp_comments):
+                tmp_lines.append(self.links[i])
+                self.errors_line_set.add(self.links[i])
+        if len(tmp_lines) > 0:
+            tmp_err = {'err_id':18,'line':tmp_lines}
+            self.errors.append(tmp_err)
 
         
 
@@ -518,6 +568,7 @@ class GrammarCheck(object):
         self.structure_ObjLine_check()
         self.structure_dollarOrTrans_check()
         self.structure_transSeq_check()
+        self.structure_transLinkOrder_check()
         
         ''' ending structure check section '''
         

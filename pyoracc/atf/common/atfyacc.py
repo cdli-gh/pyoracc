@@ -48,8 +48,8 @@ class AtfParser(object):
         self.log_tmp=LogTemplate()
         self.cur_pos=0
         self.g_check = g_check
-        self.debug_mode=False
-        self.detail_debug=False
+        self.debug_mode=False # for debug only 
+        self.detail_debug=False # for debug only 
 
     def p_codeline(self, p):
         "text_statement : AMPERSAND ID EQUALS ID newline"
@@ -1026,14 +1026,17 @@ class AtfParser(object):
         """link_operator : PARBAR
                          | TO
                          | FROM """
+        self.g_check.add_links(p.lineno(1))
         if self.debug_mode:
             print('p_link_operator')
         p[0] = p[1]
 
     def p_comment(self, p):
         "comment : COMMENT ID NEWLINE"
+        self.g_check.add_sharp_comment(p.lineno(1))
         if self.debug_mode:
             print('p_comment')
+            print(p[1])
         p[0] = Comment(p[2])
 
     def p_check(self, p):

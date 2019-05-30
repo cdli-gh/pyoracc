@@ -57,6 +57,7 @@ class AtfCDLIParser(AtfParser):
     # to remove later
     def p_version_protoocol(self, p):
         """version_protocol : VERSION ID newline"""
+        self.g_check.add_sharp_comment(p.lineno(1))
         if self.debug_mode:
             print('cdli_p_version_protoocol')
         p[0] = p[2]

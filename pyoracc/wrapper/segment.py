@@ -26,8 +26,12 @@ class Segmentor:
         if self.verbose:
             click.echo('Info: Reading file {0}.'.format(self.inputFileName))
         with codecs.open(self.inputFileName, 'r', 'utf-8') as openedFile:
+            first_flag = True
             for (i, line) in enumerate(openedFile):
+                if line=='\n' and first_flag:
+                    continue
                 self.__parse(i, line.strip())
+                first_flag=False
         self.write2file()
         return self.outfolder
 
