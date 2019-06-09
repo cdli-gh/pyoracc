@@ -10,16 +10,11 @@ matrix:
     - os: linux
       sudo: false
       python: 2.7
-      env: MYPYTHON=jython - JYTHON_URL="http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.0/jython-installer-2.7.0.jar"
-    - os: linux
-      sudo: false
-      python: 2.7
-      env: MYPYTHON=jython - JYTHON_URL="http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.1b3/jython-installer-2.7.1b3.jar"
+      env: MYPYTHON=jython - JYTHON_URL="https://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.1/jython-installer-2.7.1.jar"
     - os: linux
       sudo: false
       python: 3.5
     - os: osx
-      osx_image: xcode7.3
       language: generic
       env: PIP=pip3 MYPYTHON=python3
 env:
@@ -56,14 +51,13 @@ install:
         # Install dependencies
         $PIP install pip
         if [ "$MYPYTHON" == "jython" ]; then
-          $PIP install pip==8.1.2
-          $PIP install pytest==2.9.2
+          $PIP install pytest
         fi
         $PIP install wheel
         $PIP install setuptools
         $PIP install ply pep8 mako
         if [ "$MYPYTHON" != "jython" ]; then
-          $PIP install pytest pytest-cov codecov
+          $PIP install --upgrade pytest pytest-cov codecov
         fi
 
 script:
@@ -75,7 +69,7 @@ script:
       if [ "$MYPYTHON" == "jython" ]; then
         py.test
       else
-        py.test --cov=pyoracc --cov-report xml --cov-report html --runslow
+        pytest --cov=pyoracc
       fi
 
   - pep8 --exclude=parsetab.py .
