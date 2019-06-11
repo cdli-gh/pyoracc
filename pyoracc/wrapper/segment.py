@@ -6,7 +6,7 @@ import time
 
 
 ts = time.time()
-OUTPUT_FOLDER = 'segment'+str(ts)
+OUTPUT_FOLDER = '-segment-'+str(ts)
 
 
 class Segmentor:
