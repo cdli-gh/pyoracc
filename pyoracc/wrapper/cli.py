@@ -95,3 +95,7 @@ def main(input_path, atf_type, whole, verbose):
         check_and_process(input_path, atf_type, whole, verbose)
     tsend = time.time()
     click.echo("Total time taken: {0} minutes".format((tsend-tsbegin)/60.0))
+
+
+if __name__ == '__main__':
+    main()
