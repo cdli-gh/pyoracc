@@ -10,11 +10,14 @@ from pyoracc.wrapper.segment import Segmentor
 from pyoracc.atf.common.atffile import check_atf
 
 
-def check_atf_message((segpathname, atftype, verbose)):
-    click.echo('\n Info: Parsing {0}.'.format(segpathname))
+def check_atf_message(args):
+    segpathname, atftype, verbose = args
+    if verbose:
+        click.echo('\n Info: Parsing {0}.'.format(segpathname))
     try:
         check_atf(segpathname, atftype, verbose)
-        click.echo('Info: Correctly parsed {0}.'.format(segpathname))
+        if verbose:
+            click.echo('Info: Correctly parsed {0}.'.format(segpathname))
     except (SyntaxError, IndexError, AttributeError,
             UnicodeDecodeError) as e:
         click.echo("Info: Failed with message: {0} in {1}"
@@ -36,15 +39,18 @@ def check_and_process(pathname, atftype, whole, verbose=False):
                 if verbose:
                     click.echo('Info: Segmented into {0}.'.format(outfolder))
 
-                files = map(lambda f: os.path.join(outfolder, f), os.listdir(outfolder))
-                count_files = len(files)
+                files = map(lambda f: os.path.join(outfolder, f),
+                            os.listdir(outfolder))
+                count_files = len(list(files))
                 atftypelist = [atftype]*count_files
                 verboselist = [verbose]*count_files
-                pool.map(check_atf_message, zip(files, atftypelist, verboselist))
+                pool.map(check_atf_message,
+                         zip(files, atftypelist, verboselist))
                 pool.close()
             else:
                 check_atf_message((pathname, atftype, verbose))
-            click.echo('Info: Finished parsing {0}.'.format(pathname))
+            if verbose:
+                click.echo('Info: Finished parsing {0}.'.format(pathname))
             return 1
         except (SyntaxError, IndexError, AttributeError,
                 UnicodeDecodeError) as e:
@@ -62,7 +68,7 @@ def check_and_process(pathname, atftype, whole, verbose=False):
               prompt=True, required=True,
               help='Input the atf file type.')
 @click.option('--whole', '-w', default=False, required=False, is_flag=True,
-              help='Disables the segmentation of the atf file and run as a whole.')
+              help='Disable segmentation of the atf file and run as a whole.')
 @click.option('--verbose', '-v', default=False, required=False, is_flag=True,
               help='Enables verbose mode.')
 @click.version_option()
@@ -73,8 +79,8 @@ def main(input_path, atf_type, whole, verbose):
         failures = 0
         successes = 0
         with click.progressbar(os.listdir(input_path),
-                               label='Info: Checking the files') as bar:
-            for index, f in enumerate(bar):
+                               label='Info: Checking the files') as entries:
+            for f in entries:
                 pathname = os.path.join(input_path, f)
                 try:
                     check_and_process(pathname, atf_type, whole, verbose)
@@ -86,11 +92,16 @@ def main(input_path, atf_type, whole, verbose):
                     click.echo("Info: Failed with message: {0} in {1}"
                                .format(e, pathname))
                 finally:
-                    try:
-                        click.echo("Failed with {0} out of {1} ({2}%)"
-                                   .format(failures, failures + successes, failures * 100.0 / (failures + successes)))
-                    except ZeroDivisionError:
+                    total = failures + successes
+                    if not total:
                         click.echo("Empty files to process")
+                    elif failures:
+                        click.echo("Failed with {0} out of {1} ({2}%)"
+                                   .format(failures,
+                                           total,
+                                           failures * 100.0 / total))
+                    else:
+                        click.echo("All {0} passed!".format(successes))
     else:
         check_and_process(input_path, atf_type, whole, verbose)
     tsend = time.time()
