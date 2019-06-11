@@ -32,7 +32,7 @@ class AtfLexicon(object):
                        'END', 'COLUMNS', 'LINE', 'LINES', 'CASE', 'CASES',
                        'SURFACE', 'SPACE', 'BLANK', 'BROKEN',
                        'EFFACED', 'ILLEGIBLE', 'MISSING', 'TRACES', 'RULING',
-                       'SINGLE', 'DOUBLE', 'TRIPLE', 'AT']
+                       'SINGLE', 'DOUBLE', 'TRIPLE', 'AT', 'ERASED']
 
     TRANSLATION_KEYWORDS = ['PARALLEL', 'PROJECT', "LABELED"]
 

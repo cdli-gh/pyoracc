@@ -8,7 +8,7 @@ pyoracc
 
 Python tools for working with ORACC/C-ATF files
 
-Depends on PLY, Mako and Pytest
+Depends on PLY, Mako, Multiprocessing and Pytest
 
 # Installation
 
@@ -72,7 +72,11 @@ To run it on oracc file:
 To run it on folder:
 
     $ pyoracc -i ./pyoracc/test/data -f cdli
+    
+To disable segmentation (will be slow) and to run on whole, use switch -w/--whole:
 
+    $ pyoracc -i ./pyoracc/test/data -f cdli -w
+    
 To see the console messages of the tool, use --verbose switch
 
     $ pyoracc -i ./pyoracc/test/data -f cdli --verbose
