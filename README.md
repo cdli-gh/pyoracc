@@ -113,6 +113,7 @@ Options:
   -i, --input_path PATH      Input the file/folder name.  [required]
   -f, --atf_type [cdli|atf]  Input the atf file type.  [required]
   -v, --verbose              Enables verbose mode
+  -w, --whole                Disables the segmentation of the atf file and run as a whole.
   -s, --summary              Input the summary path, only useful when run without -w/--whole
   --version                  Show the version and exit.
   --help                     Show this message and exit.

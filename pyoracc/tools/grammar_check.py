@@ -1,4 +1,66 @@
+'''
+Here provide some rough guidelines about how the GrammarCheck class works.
 
+Firstly, it is an individial object for checking a ATF file which will be 
+created before parsing. It will be passed into the ATFLexer and AtfParser 
+(for common, oracc, or cdli type) as an class attribute. Then you may collect 
+the necessary information during the parsing(lex or yacc). For example, you 
+may collect the line number or offset of the ID line, or language line. 
+After the parsing, you may utilize the collected information to perform required 
+format checking, and collect error(s). A rough workflow is shown below:
+
+1. create GrammerCheck()
+2. pass as an attribute of ATFLexer & AtfParser 
+3. collect information while parsing 
+4. perform checking& collect errors after parsing 
+5. you may utilize the errors to print information
+
+more detail for each step is presneted below:
+
+1. << create the GrammerCheck() >> & 2.<< pass as an attribute of ATFLexer & AtfParser >>
+ These two happen in the pyoracc.atf.common.atffile. It is very simple and no need to change.
+
+3. << collect information while parsing >>
+ More development should usually start from here. 
+ 1) As the GrammerCheck is a attribute (g_check) of ATFLexer & AtfParser, you may invoke the methods 
+    of g_check to collect information during the parsing. This require developer to know the parsing flow 
+    in the ATFLexer & AtfParser. For easy code management, the methods for collecting information is usually
+    written in the "conmmon function section". Also you may add more attributes in this class for managing the 
+    collected information.
+
+ 2) Here, a sepcial error collection proccess will be performed during the parsing, which is to collect the default 
+    errors from Lex and Yacc. It will be add to the self.errors_yacc and self.errors_lex attributs, which are lists. 
+
+4. << perform checking& collect errors after parsing >>   
+ 
+ 1) Once the parsing is finished, GrammerCheck will be invoked a method called check(), which happens in the
+    pyoracc.atf.common.atffile. check() methods will perform all checkings which have been implemented.
+    Currently there are mainly three types of checking(line_check(), structure_check(), lex_yacc_check()).
+        * line_check() is for checking the error inside lines
+        * structure_check() is for checking components, e.g. is there a ID line or more than one ID lines?
+        * lex_yacc_check() is a special check which should always be done after all checking, it is used to 
+          check if the line number of default errors, if it is not there it will be added to the self.errors.
+    For easy management, you usually should add new function at each corresponding section below.
+
+ 2) for collecting errors, all errors after each check function should be add to the self.errors attribute.
+    Here, we do not directly collect error message, instead we collect a list of objects which conatins necessary
+    inforation to made error message later.
+
+    For each error object, err_id (a int) is the only required attribute. e.g. {err_id:1}.
+    We use err_id to distinguish different error, and we will use ErrorsTemplate class in pyoracc.tools.errors_template
+    to reproduce message whenever you have the self.errors.
+
+    For developer, you may customize other attributes of error object which will be used to produce error message.
+                   you may find which err_id has been used in the pyoracc.tools.errors_template, and we may create file for better management in the future.
+
+    Also you should use self.errors_line_set to record the errors lines when you find errors, this is for convenient when we perform 
+    lex_yacc_check().
+
+5. After you get the self.errors, you may use them to do other things.
+   You may use ErrorsTemplate class in pyoracc.tools.errors_template to produce error messages.
+
+More detail, may be add when more developments are added.
+'''
 
 
 import re
