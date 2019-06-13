@@ -159,6 +159,8 @@ class GrammarCheck(object):
         rule = re.match(r'\d+', tran_id)
         if rule:
             tmp_id=rule.group(0)
+        elif tran_id[0:2]=='>>':
+            return 
         else:
             tmp_id='99999'
         # tmp_id=tran_id.replace('\'','')
@@ -578,18 +580,13 @@ class GrammarCheck(object):
         tmp_lines=[]
         tmp_start=1          
         tmp_surfaces=self.surfaces[:]
-        tmp_surfaces.append(int(self.trans[-1][1]+1))
-        # print(1)    
+        tmp_surfaces.append(int(self.trans[-1][1]+1))    
         for i in range(1,len(tmp_surfaces)):
             tmp_bound = int(tmp_surfaces[i])
-            # print(2)
             tmp_pre = int(self.trans[tmp_start-1][0]) if len(self.trans[tmp_start-1][0])>=1 else 99999
-            # print(tmp_pre)
             for j in range(tmp_start,len(self.trans)):
                 curr_id = int(self.trans[j][0]) if len(self.trans[j][0])>=1 else -1
-                # print(curr_id)
                 curr_line = int(self.trans[j][1])
-                # print(5)
                 if curr_line >= tmp_bound:
                     tmp_start = j+1
                     break
