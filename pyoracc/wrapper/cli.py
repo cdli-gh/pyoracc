@@ -67,7 +67,7 @@ def check_and_process(pathname,summary,atftype, whole, verbose=False):
         try:
             segmentor = Segmentor(pathname, verbose)
             if not whole:
-                pool = Pool()
+                pool = Pool(processes=4)
                 # segmentor = Segmentor(pathname, verbose)
                 outfolder = segmentor.convert()
                 if verbose:

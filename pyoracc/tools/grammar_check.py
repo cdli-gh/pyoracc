@@ -156,13 +156,27 @@ class GrammarCheck(object):
 
         add id and line number of transliterration line (e.g. 4. szu nam-ti-la-ni) to the self.trans as a tuple (tran_id,tran_line)
         '''
+        
+        tran_id = tran_id.replace('.','')
+        tran_id = tran_id.replace('\'','')
+        # print(tran_id)
         rule = re.match(r'\d+', tran_id)
         if rule:
-            tmp_id=rule.group(0)
-        elif tran_id[0:2]=='>>':
+            tmp_id = rule.group(0)
+            if len(tmp_id)<len(tran_id):
+                tmp_extra = ord(tran_id[len(tmp_id):][0])
+                tmp_offset = ord('a')
+                if tmp_extra>=97 and tmp_extra<=122:
+                    tmp_id = tmp_id + str(tmp_extra - tmp_offset)
+                else:
+                    tmp_id = tmp_id + '0'
+            else:
+                tmp_id = tmp_id + '0'
+        elif tran_id[0:2] == '>>':
             return 
         else:
             tmp_id='99999'
+        # print(tmp_id)
         # tmp_id=tran_id.replace('\'','')
         # tmp_id=tmp_id.replace('.','')
         self.trans.append((tmp_id,tran_line))
@@ -403,7 +417,7 @@ class GrammarCheck(object):
         tmp_lines2 = []
         for i in self.trans:
             line = seg_input[i[1]-1]
-            rule = re.match(r'\d+?\'?\.', line)            
+            rule = re.match(r'\d+?[a-z]?\'?\.', line)            
             if rule:
                 digits_str = re.match(r'\d+',rule.group(0)).group(0)
                 if len(digits_str)>4:
@@ -432,7 +446,7 @@ class GrammarCheck(object):
 
         tmp_lines = []
         for i in range(len(seg_input)-1):
-            rule = re.match(r'\d+?\'?\.|@|#|&|\>\>|\$', seg_input[i])
+            rule = re.match(r'\d+?[a-z]?\'?\.|@|#|&|\>\>|\$', seg_input[i])
             if rule:
                 pass
             else:
@@ -441,7 +455,26 @@ class GrammarCheck(object):
         if len(tmp_lines)>0:
             tmp_err={'err_id':17,'line':tmp_lines}
             self.errors.append(tmp_err)
+    
+    def line_no_brackets3periods_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
 
+        error ID: 19,
+
+        no (...) is allowed, if find, put the error into self.errors and put the error line 
+        into self.errors_line_set
+        '''     
+        tmp_lines = []
+        for i in range(len(seg_input)-1):
+            idx = seg_input[i].find('(...)')
+            if idx!=-1:
+                tmp_lines.append(i+1)
+                self.errors_line_set.add(i+1)
+        if len(tmp_lines)>0:
+            tmp_err={'err_id':19,'line':tmp_lines}
+            self.errors.append(tmp_err)
 
 
     def line_check(self):
@@ -459,6 +492,7 @@ class GrammarCheck(object):
         self.tranline_start4digits_check(seg_input)
         self.line_incomplete_bracket_check(seg_input)
         self.line_first_sign_check(seg_input)
+        self.line_no_brackets3periods_check(seg_input)
     
     ''' ending line check section '''
 

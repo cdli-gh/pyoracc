@@ -33,11 +33,11 @@ class ErrorsTemplate(object):
         
         elif error_id == 1:
             line = error['line']
-            error_str = u"PyOracc Error at line {}: Except the #-comments, language Line (e.g. \# atf: lang) should be the 2nd components after ID line in an ATF section".format(oline+line[0])
+            error_str = u"PyOracc Error at line {}: Except the #link, language Line (e.g. \# atf: lang) should be the 2nd components after ID line in an ATF section".format(oline+line[0])
 
         elif error_id == 2:
             line = error['line']
-            error_str = u"PyOracc Error at line {}: Except the #-comments, Artifact Type line (e.g. @tablet) should be the 3rd components after ID line and language Line in an ATF section.".format(oline+line[0])
+            error_str = u"PyOracc Error at line {}: Except the #link, Artifact Type line (e.g. @tablet) should be the 3rd components after ID line and language Line in an ATF section.".format(oline+line[0])
 
         elif error_id == 3:
             error_str = u"PyOracc Error: First line of a text should start with like \"&P123456 = AB 78, 910\""
@@ -115,7 +115,7 @@ class ErrorsTemplate(object):
             for i in range(len(line)):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
-            error_str += u": A transliteration must starts with a number which contains 1-4 digits followed by an optional \"\'\" plus a mandatory \".\" . e.g. 1'. or 133."
+            error_str += u": A transliteration must starts with a number which contains 1-4 digits followed by an optional \"\'\", \".\"or [a-z] plus a mandatory \".\" . e.g. 1'., 1a., or 133."
 
         elif error_id == 15:
             line = error['line']
@@ -140,7 +140,7 @@ class ErrorsTemplate(object):
             for i in range(len(line)):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
-            error_str += u": A line should start either by &, #, @, $, or number."
+            error_str += u": A line should start either by &, #, @, $, >>, or number(with optional singal digit [a-z] or \"'\")."
 
         elif error_id == 18:
             line = error['line']
@@ -149,6 +149,14 @@ class ErrorsTemplate(object):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
             error_str += u": Link line (starting from >>) should follow the trans line."
+
+        elif error_id == 19:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str+=str(oline+line[i])
+                error_str+=', ' if i<(len(line)-1) else ''      
+            error_str += u": (...) is not allowed."
 
 
         error_str = error_str.encode('UTF-8') if _pyversion()==2 else error_str
