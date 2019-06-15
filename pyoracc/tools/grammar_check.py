@@ -147,6 +147,7 @@ class GrammarCheck(object):
         add line number of surface line (e.g. @reverse) to the self.surfaces
         '''
         self.surfaces.append(surface)
+        # print(self.surfaces)
 
     def add_trans(self,tran_id,tran_line):
         '''
@@ -159,6 +160,7 @@ class GrammarCheck(object):
         
         tran_id = tran_id.replace('.','')
         tran_id = tran_id.replace('\'','')
+        tran_id = tran_id.lower()
         # print(tran_id)
         rule = re.match(r'\d+', tran_id)
         if rule:
@@ -402,6 +404,31 @@ class GrammarCheck(object):
             tmp_err = {'err_id':13,'line':tmp_lines}
             self.errors.append(tmp_err)
 
+    def tranline_no_char_c_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 21
+
+        no char c is allowed in trans line, if find, put the error into self.errors and put the error line 
+        into self.errors_line_set
+        
+        '''
+
+        tmp_lines = []
+        for i in self.trans:
+            line = seg_input[i[1]-1]
+            line = line[line.find(' '):]
+            idx = line.find('c')
+            if idx!=-1:
+                tmp_lines.append(i[1])
+                self.errors_line_set.add(i[1])
+        if len(tmp_lines)>0:
+            tmp_err={'err_id':21,'line':tmp_lines}
+            self.errors.append(tmp_err) 
+
+
     def tranline_start4digits_check(self,seg_input):
         '''
         :params seg_input: list, a list of lines which segemented from the original input
@@ -417,7 +444,7 @@ class GrammarCheck(object):
         tmp_lines2 = []
         for i in self.trans:
             line = seg_input[i[1]-1]
-            rule = re.match(r'\d+?[a-z]?\'?\.', line)            
+            rule = re.match(r'\d+?[a-z]?\'?\.', line)#[A-Z]?            
             if rule:
                 digits_str = re.match(r'\d+',rule.group(0)).group(0)
                 if len(digits_str)>4:
@@ -440,13 +467,13 @@ class GrammarCheck(object):
 
         error ID: 17
 
-        find if all the lines satrting by one of the &, #, @, $, and number within 4 digits,
+        find if all the lines satrting by one of the &, #, @, $, >>, and number within 4 digits,
         and put the error into self.errors and put the error line into self.errors_line_set
         '''
 
         tmp_lines = []
         for i in range(len(seg_input)-1):
-            rule = re.match(r'\d+?[a-z]?\'?\.|@|#|&|\>\>|\$', seg_input[i])
+            rule = re.match(r'\d+?\.?[a-z]?[A-Z]?\'?\.|@|#|&|\>\>|\$', seg_input[i])
             if rule:
                 pass
             else:
@@ -463,7 +490,7 @@ class GrammarCheck(object):
 
         error ID: 19,
 
-        no (...) is allowed, if find, put the error into self.errors and put the error line 
+        (...) is not allowed, if find, put the error into self.errors and put the error line 
         into self.errors_line_set
         '''     
         tmp_lines = []
@@ -475,6 +502,51 @@ class GrammarCheck(object):
         if len(tmp_lines)>0:
             tmp_err={'err_id':19,'line':tmp_lines}
             self.errors.append(tmp_err)
+
+    def line_no_xxx_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 20,
+
+        xxx is not allowed, if find, put the error into self.errors and put the error line 
+        into self.errors_line_set
+        '''     
+        tmp_lines = []
+        for i in range(len(seg_input)-1):
+            idx = seg_input[i].find('xxx')
+            if idx!=-1:
+                tmp_lines.append(i+1)
+                self.errors_line_set.add(i+1)
+        if len(tmp_lines)>0:
+            tmp_err={'err_id':20,'line':tmp_lines}
+            self.errors.append(tmp_err)
+
+    def surfaceline_seal_follow_label_check(self,seg_input):
+        '''
+        :params seg_input: list, a list of lines which segemented from the original input
+        :return: N/A
+
+        error ID: 22,
+
+        @seal must be followed by a label (say `@seal 1'), if no lable, put the error into 
+        self.errors and put the error line into self.errors_line_set
+        '''     
+        tmp_lines = []
+        for i in range(len(seg_input)-1):
+            idx = seg_input[i].find('@seal')
+            if idx!=-1:
+                rule = rule = re.match(r'@seal\s\d+', seg_input[i])
+                if rule:
+                    pass
+                else:
+                    tmp_lines.append(i+1)
+                    self.errors_line_set.add(i+1)
+        if len(tmp_lines)>0:
+            tmp_err={'err_id':22,'line':tmp_lines}
+            self.errors.append(tmp_err)
+
 
 
     def line_check(self):
@@ -490,9 +562,12 @@ class GrammarCheck(object):
         self.tranline_ASCII_check(seg_input)
         self.tranline_numFollowsign_check(seg_input)
         self.tranline_start4digits_check(seg_input)
+        self.tranline_no_char_c_check(seg_input)
         self.line_incomplete_bracket_check(seg_input)
         self.line_first_sign_check(seg_input)
         self.line_no_brackets3periods_check(seg_input)
+        self.line_no_xxx_check(seg_input)
+        self.surfaceline_seal_follow_label_check(seg_input)
     
     ''' ending line check section '''
 

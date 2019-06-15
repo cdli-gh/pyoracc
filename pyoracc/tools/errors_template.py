@@ -131,7 +131,7 @@ class ErrorsTemplate(object):
             for i in range(len(line)):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
-            error_str += u": Transliteration lines numbering under each surface must be sequential (increasing)"
+            error_str += u": Transliteration lines numbering under each surface must be sequential (increasing), the numbering only takes two levels (i.e. 1.a.1 = 1.a)"
 
 
         elif error_id == 17:
@@ -157,6 +157,30 @@ class ErrorsTemplate(object):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
             error_str += u": (...) is not allowed."
+
+        elif error_id == 20:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str+=str(oline+line[i])
+                error_str+=', ' if i<(len(line)-1) else ''      
+            error_str += u": \"xxx\" is not allowed."
+
+        elif error_id == 21:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str+=str(oline+line[i])
+                error_str+=', ' if i<(len(line)-1) else ''      
+            error_str += u": \"c\" is not allowed in trans line, use \"sz\" for shin"
+
+        elif error_id == 22:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str+=str(oline+line[i])
+                error_str+=', ' if i<(len(line)-1) else ''      
+            error_str += u": @seal must be followed by a label (e.g. @seal 1)"
 
 
         error_str = error_str.encode('UTF-8') if _pyversion()==2 else error_str
