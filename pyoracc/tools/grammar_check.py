@@ -276,24 +276,31 @@ class GrammarCheck(object):
     def is_nested_bracket(self,line):
         '''
         :params line: str, the line for checking
-        :return: bool, if there are nested brackets return True else return False
+        :return: int, 0: no nested
+                      1: same type brackets nested
+                      2: [ nested inside {} or ()
+
+
 
         find if a line contains nested brackets
         '''
         stack=[]
-        l_brackets={'{','('} #,'<'
-        r_brackets={')','}'} # '>',
+        l_brackets={'{','(','['} #,'<'
+        r_brackets={')','}',']'} # '>',
         for i in line:
-            if (i in l_brackets) and len(set(stack).intersection(l_brackets))>0:
-                return True
+            if (i in l_brackets):# and len(set(stack).intersection(l_brackets))>0:
+                if (i in stack):
+                    return 1
+                if i=='[' and (('{' in stack) or ('(' in stack)):
+                    return 2 
             if (len(stack)>0):
-                if (i in r_brackets) and ((i=='}' and stack[-1]=='{') or (i==')' and stack[-1]=='(')):#(i=='>' and stack[-1]=='<') or 
+                if (i in r_brackets) and ((i=='}' and stack[-1]=='{') or (i==')' and stack[-1]=='(') or (i==']' and stack[-1]=='[')):#(i=='>' and stack[-1]=='<') or 
                     stack.pop()
                 elif (i in r_brackets) or (i in l_brackets):
                     stack.append(i)
             elif (i in r_brackets) or (i in l_brackets):
                 stack.append(i)
-        return False
+        return 0
 
     def is_incomplete_bracket(self,line):
         '''
@@ -303,11 +310,11 @@ class GrammarCheck(object):
         find if a line contains incomplete brackets
         '''
         stack=[]
-        l_brackets={'{','('}#,'<'
-        r_brackets={')','}'}#'>',
+        l_brackets={'{','(','['}#,'<'
+        r_brackets={')','}',']'}#'>',
         for i in line:
             if (len(stack)>0):
-                if (i in r_brackets) and ((i=='}' and stack[-1]=='{') or (i==')' and stack[-1]=='(')):#(i=='>' and stack[-1]=='<') or 
+                if (i in r_brackets) and ((i=='}' and stack[-1]=='{') or (i==')' and stack[-1]=='(') or (i==']' and stack[-1]=='[')):#(i=='>' and stack[-1]=='<') or 
                     stack.pop()
                 elif (i in r_brackets) or (i in l_brackets):
                     stack.append(i)
@@ -320,19 +327,28 @@ class GrammarCheck(object):
         :params seg_input: list, a list of lines which segemented from the original input
         :return: N/A
 
-        error ID: 10
+        error ID: 10, 23
 
         find if a trans line contains nested brackets, and put the error into self.errors and put the error line into self.errors_line_set
+            error 10: for same type brackets nested
+            error 23: for [ nested inside {} or ()
         '''
-        tmp_lines = []
+        tmp_lines1 = []
+        tmp_lines2 = []
         for i in self.trans:
-            if self.is_nested_bracket(seg_input[i[1]-1]):
-                tmp_lines.append(i[1])
+            error_int = self.is_nested_bracket(seg_input[i[1]-1])
+            if error_int == 1:
+                tmp_lines1.append(i[1])
                 self.errors_line_set.add(i[1])
-        if len(tmp_lines)>0:
-            tmp_err={'err_id':10,'line':tmp_lines}
+            elif error_int == 2:
+                tmp_lines2.append(i[1])
+                self.errors_line_set.add(i[1])
+        if len(tmp_lines1)>0:
+            tmp_err={'err_id':10,'line':tmp_lines1}
             self.errors.append(tmp_err)
-            self.errors_line_set = self.errors_line_set.union(set(tmp_lines))
+        if len(tmp_lines2)>0:
+            tmp_err={'err_id':23,'line':tmp_lines2}
+            self.errors.append(tmp_err)
 
     def line_incomplete_bracket_check(self,seg_input):
         '''

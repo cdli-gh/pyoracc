@@ -81,7 +81,7 @@ class ErrorsTemplate(object):
             for i in range(len(line)):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
-            error_str += u": Brackets cannot be nested in transliteration line."
+            error_str += u": No same type brackets can be nested in transliteration line."
 
         elif error_id == 11:
             line = error['line']
@@ -182,6 +182,13 @@ class ErrorsTemplate(object):
                 error_str+=', ' if i<(len(line)-1) else ''      
             error_str += u": @seal must be followed by a label (e.g. @seal 1)"
 
+        elif error_id == 23:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str+=str(oline+line[i])
+                error_str+=', ' if i<(len(line)-1) else ''      
+            error_str += u": \"[\" brackets cannot be nested in \"\{\}\" or \"\(\)\"."
 
         error_str = error_str.encode('UTF-8') if _pyversion()==2 else error_str
         return error_str
