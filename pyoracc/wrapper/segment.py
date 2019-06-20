@@ -6,14 +6,16 @@ import time
 
 
 ts = time.time()
-OUTPUT_FOLDER = 'segment'+str(ts)
+OUTPUT_FOLDER = '-segment-'+str(ts)
 
 
 class Segmentor:
     def __init__(self, inputFile, verbose):
         self.inputFileName = inputFile
-        self.outfolder = os.path.join(os.path.dirname(self.inputFileName), "..",
-                                      os.path.basename(self.inputFileName)+OUTPUT_FOLDER)
+        folderName = os.path.basename(self.inputFileName) + OUTPUT_FOLDER
+        self.outfolder = os.path.join(os.path.dirname(self.inputFileName),
+                                      "..",
+                                      folderName)
         self.verbose = verbose
         self.__reset__()
 
