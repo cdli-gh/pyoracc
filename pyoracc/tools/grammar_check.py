@@ -490,7 +490,7 @@ class GrammarCheck(object):
         tmp_lines = []
         for i in range(len(seg_input)-1):
             rule = re.match(r'\d+?\.?[a-z]?[A-Z]?\'?\.|@|#|&|\>\>|\$', seg_input[i])
-            if rule:
+            if rule or seg_input[i]=='':
                 pass
             else:
                 tmp_lines.append(i+1)
@@ -563,6 +563,23 @@ class GrammarCheck(object):
             tmp_err={'err_id':22,'line':tmp_lines}
             self.errors.append(tmp_err)
 
+    def no_blanklines_check(self,seg_input):
+        '''
+        :return: N/A
+
+        error ID: 24
+
+        no blank lines inside a text, if find, put the error into 
+        self.errors
+        '''
+        tmp_lines = []
+        for i in range(len(seg_input)-1):
+            if seg_input[i]=='':
+                tmp_lines.append(i+1)
+                self.errors_line_set.add(i+1)
+        if len(tmp_lines)>0:
+            tmp_err={'err_id':24,'line':tmp_lines}
+            self.errors.append(tmp_err)
 
 
     def line_check(self):
@@ -584,6 +601,7 @@ class GrammarCheck(object):
         self.line_no_brackets3periods_check(seg_input)
         self.line_no_xxx_check(seg_input)
         self.surfaceline_seal_follow_label_check(seg_input)
+        self.no_blanklines_check(seg_input)
     
     ''' ending line check section '''
 

@@ -49,10 +49,11 @@ def output_error(error_list, summary, pathname, whole, summary_str,orig_map):
     click.echo(summary_str)
 
 
-def check_atf_message((segpathname, atftype, verbose,skip)): # this tuple parameters format no longer support in python3
-    # click.echo('\n Info: Parsing {0}.'.format(segpathname))
+def check_atf_message(args):
+    segpathname, atftype, verbose,skip = args
+    if verbose:
+        click.echo('\n Info: Parsing {0}.'.format(segpathname))
     atf_id = (segpathname.split('/')[-1]).split('.')[0]# extract atf_id(e.g. P136211) 
-    # print(atf_id)
     errors= check_atf(segpathname, atftype, verbose,skip,atf_id)
     return (errors,atf_id,segpathname)
 
@@ -67,14 +68,13 @@ def check_and_process(pathname,summary,atftype, whole, verbose=False):
         try:
             segmentor = Segmentor(pathname, verbose)
             if not whole:
-                pool = Pool(processes=4)
-                # segmentor = Segmentor(pathname, verbose)
+                pool = Pool(processes=6)
                 outfolder = segmentor.convert()
                 if verbose:
                     click.echo('Info: Segmented into {0}.'.format(outfolder))
 
                 files = map(lambda f: os.path.join(outfolder, f), os.listdir(outfolder))
-                count_files = len(files)
+                count_files = len(list(files))
                 atftypelist = [atftype]*count_files
                 verboselist = [verbose]*count_files
                 skiplist = [not whole]*count_files

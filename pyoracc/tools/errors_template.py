@@ -188,7 +188,15 @@ class ErrorsTemplate(object):
             for i in range(len(line)):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
-            error_str += u": \"[\" brackets cannot be nested in \"\{\}\" or \"\(\)\"."
+            error_str += u": \"[\" brackets cannot be nested in \"{}\" or \"()\"."
+
+        elif error_id == 24:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str+=str(oline+line[i])
+                error_str+=', ' if i<(len(line)-1) else ''      
+            error_str += u": no blank lines inside a text."
 
         error_str = error_str.encode('UTF-8') if _pyversion()==2 else error_str
         return error_str
