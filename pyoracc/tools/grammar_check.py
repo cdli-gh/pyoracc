@@ -440,6 +440,7 @@ class GrammarCheck(object):
             if idx!=-1:
                 tmp_lines.append(i[1])
                 self.errors_line_set.add(i[1])
+        print(tmp_lines)
         if len(tmp_lines)>0:
             tmp_err={'err_id':21,'line':tmp_lines}
             self.errors.append(tmp_err) 

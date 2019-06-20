@@ -34,8 +34,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 if _pyversion()==2:
     dependencies = ['click', 'mako', 'ply', 'multiprocessing'] #
 else:
-    dependencies = ['click', 'mako']
-    
+    dependencies = ['click', 'mako', 'ply']
+
 extra_dependencies = ['pytest', 'pytest-cov', 'codecov', 'pycodestyle']
 
 
