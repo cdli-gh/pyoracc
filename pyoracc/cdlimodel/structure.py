@@ -72,10 +72,10 @@ ${child.serialize()}
         faceSurfaceRegex = re.compile("@face")
         sealRegex = re.compile("@seal")
 
-        surfaceList = filter(surfaceRegex.match, self.surfaceList)
-        specificSurfaceList = filter(specificSurfaceRegex.match, self.surfaceList)
-        faceSurfaceList = filter(faceSurfaceRegex.match, self.surfaceList)
-        sealList = filter(sealRegex.match, self.surfaceList)
+        surfaceList = list(filter(surfaceRegex.match, self.surfaceList))
+        specificSurfaceList = list(filter(specificSurfaceRegex.match, self.surfaceList))
+        faceSurfaceList = list(filter(faceSurfaceRegex.match, self.surfaceList))
+        sealList = list(filter(sealRegex.match, self.surfaceList))
 
         # print(self.objectType)
 

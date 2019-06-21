@@ -8,6 +8,7 @@ from pyoracc.wrapper.segment import Segmentor
 from pyoracc.atf.common.atffile import check_atf
 from pyoracc.tools.logtemplate import LogTemplate
 from pyoracc.tools.errors_template import ErrorsTemplate
+from itertools import product
 log_tmp=LogTemplate()
 error_tmp=ErrorsTemplate()
 
@@ -73,8 +74,8 @@ def check_and_process(pathname,summary,atftype, whole, verbose=False):
                 if verbose:
                     click.echo('Info: Segmented into {0}.'.format(outfolder))
 
-                files = map(lambda f: os.path.join(outfolder, f), os.listdir(outfolder))
-                count_files = len(list(files))
+                files = list(map(lambda f: os.path.join(outfolder, f), os.listdir(outfolder)))
+                count_files = len(files)
                 atftypelist = [atftype]*count_files
                 verboselist = [verbose]*count_files
                 skiplist = [not whole]*count_files
