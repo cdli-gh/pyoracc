@@ -2,3 +2,4 @@ recursive-include pyoracc *.py
 include pyoracc/cdlimodel/support_files/*.txt
 include LICENSE.txt
 include README.md
+include pyoracc/tools/jsons/*.json

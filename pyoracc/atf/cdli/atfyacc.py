@@ -5,14 +5,13 @@ from pyoracc.model.oraccnamedobject import OraccNamedObject
 from pyoracc.atf.common.atfyacc import AtfParser
 from pyoracc.model.state import State
 from pyoracc.model.text import Text
-
 from pyoracc.model.link_reference import LinkReference
 
-from pyoracc.cdlimodel.structure import Structure
+# from pyoracc.cdlimodel.structure import Structure
 
-from pyoracc.cdlimodel.cdlitext import CDLIText
+# from pyoracc.cdlimodel.cdlitext import CDLIText
 
-objStructure = Structure()
+# objStructure = Structure()
 
 
 class AtfCDLIParser(AtfParser):
@@ -30,10 +29,10 @@ class AtfCDLIParser(AtfParser):
         p[0] = p[1]
         if self.debug_mode:
             print('cdli_p_document')
-        objStructure.CheckSurfaceRules()
-        objStructure.PrintResults()
-        objStructure.ClearData()
-        objStructure.ResetColumnCounter()
+        # objStructure.CheckSurfaceRules()
+        # objStructure.PrintResults()
+        # objStructure.ClearData()
+        # objStructure.ResetColumnCounter()
 
     def p_linkreference_label(self, p):
         """link_reference : link_reference ID
@@ -84,24 +83,24 @@ class AtfCDLIParser(AtfParser):
         p[0].description = p[4]
 
         # CDLI Code
-        objText = CDLIText()
-        value, status, errorValue = objText.CheckPMap(p[0].code)
-        if errorValue:
-            print(errorValue)
+        # objText = CDLIText()
+        # value, status, errorValue = objText.CheckPMap(p[0].code)
+        # if errorValue:
+        #     print(errorValue)
 
-        if not objText.CheckPnumber(p[0].code):
-            print("Incorrect Pnumber: " + str(p[0].code))
+        # if not objText.CheckPnumber(p[0].code):
+        #     print("Incorrect Pnumber: " + str(p[0].code))
 
-        global objStructure
-        objStructure.UpdatePnumber(p[0].code)
+        # global objStructure
+        # objStructure.UpdatePnumber(p[0].code)
 
-        if objStructure.newtext_status:
-            objStructure.newtext_status = False
-        else:
-            objStructure.CheckSurfaceRules()
-            objStructure.PrintResults()
-            objStructure.ClearData()
-            objStructure.ResetColumnCounter()
+        # if objStructure.newtext_status:
+        #     objStructure.newtext_status = False
+        # else:
+        #     objStructure.CheckSurfaceRules()
+        #     objStructure.PrintResults()
+        #     objStructure.ClearData()
+        #     objStructure.ResetColumnCounter()
 
 
 
@@ -116,7 +115,7 @@ class AtfCDLIParser(AtfParser):
         if self.debug_mode:
             print('cdli_p_object_nolabel')
         p[0] = OraccObject(p[1])
-        objStructure.SetObjectType(str(p[0]))
+        # objStructure.SetObjectType(str(p[0]))
         # print "Test: %s" % p[0]
 
     def p_object_label(self, p):
@@ -127,7 +126,7 @@ class AtfCDLIParser(AtfParser):
         if self.debug_mode:
             print('cdli_p_object_label')
         p[0] = OraccNamedObject(p[1], p[2])
-        objStructure.SetObjectType(str(p[2]))
+        # objStructure.SetObjectType(str(p[2]))
 
 
 
@@ -146,7 +145,7 @@ class AtfCDLIParser(AtfParser):
         if self.debug_mode:
             print('cdli_p_surface_nolabel')
         p[0] = OraccObject(p[1])
-        objStructure.SetSurface(str(p[0]))
+        # objStructure.SetSurface(str(p[0]))
         # print "%s" %p[0]
 
     def p_surface_label(self, p):
@@ -159,10 +158,10 @@ class AtfCDLIParser(AtfParser):
         if self.debug_mode:
             print('cdli_p_surface_label')
         p[0] = OraccNamedObject(p[1], p[2])
-        if str(p[2]) == "column":
-            objStructure.IncrementColumnCounter()
-        else:
-            objStructure.SetSurface(str(p[0]))
+        # if str(p[2]) == "column":
+        #     objStructure.IncrementColumnCounter()
+        # else:
+        #     objStructure.SetSurface(str(p[0]))
         # print "%s" %p[0]
 
     def p_milestone_brief(self, p):

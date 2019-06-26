@@ -40,7 +40,7 @@ class ErrorsTemplate(object):
             error_str = u"PyOracc Error at line {}: Except the #link, Artifact Type line (e.g. @tablet) should be the 3rd components after ID line and language Line in an ATF section.".format(oline+line[0])
 
         elif error_id == 3:
-            error_str = u"PyOracc Error: First line of a text should start with like \"&P123456 = AB 78, 910\""
+            error_str = u"PyOracc Error: First line at {} of a text should start with like \"&P123456 = AB 78, 910\".".format(oline+1)
         
         elif error_id == 4:
             line = error['line']
@@ -96,9 +96,9 @@ class ErrorsTemplate(object):
             lcpairs = error['lcpairs']
             error_str = u"PyOracc Error: Transliretation lines must contain only ASCII characters.\n"
             for i in lcpairs:
-                error_str+=(u' '*5+u'at line '+str(oline+i[0])+'\n')
+                error_str+=(u' '*5+u'at line '+str(oline+i[0])+' column ')
                 for j in range(1,len(i)):
-                    error_str += (u' '*8+u'column {}, char {}\n'.format(i[j][0],i[j][1]))
+                    error_str += str(i[j][0])+', ' if (j<len(i)-1) else str(i[j][0])+'\n'
 
         elif error_id == 13:
             line = error['line']
@@ -197,6 +197,37 @@ class ErrorsTemplate(object):
                 error_str+=str(oline+line[i])
                 error_str+=', ' if i<(len(line)-1) else ''      
             error_str += u": no blank lines inside a text."
+
+        elif error_id == 25:
+            error_str = u"PyOracc Error: No ATF ID find in the ATF ID to period ID mapping catalogue."
+
+        elif error_id == 26:
+            error_str = u"PyOracc Error: ATF ID has not yet been specified in the period catalogue."
+
+        elif error_id == 27:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str+=str(oline+line[i])
+                error_str+=', ' if i<(len(line)-1) else ''      
+            error_str += u": Word \"{}\" should not be in the period {}.".format(error['word'],error['period'])
+
+        elif error_id == 28:
+            line = error['line']
+            error_str = u"PyOracc Error at line "
+            for i in range(len(line)):
+                error_str += str(oline+line[i])
+                error_str += ', ' if i<(len(line)-1) else ''      
+            error_str += u": Sign \"{}\" should not be in the period {}.".format(error['sign'],error['period'])
+
+        elif error_id == 29:
+            error_str = u"PyOracc Error: Corresponding PID {} is not in the current Sign List.".format(error['pid'])
+
+        elif error_id == 30:
+            error_str = u"PyOracc Error: Corresponding PID {} is not in the current Word List.".format(error['pid'])
+
+        elif error_id == 31:
+            error_str = u"PyOracc Error: This ATF text has not ATF ID at line {}.".format(oline+1)
 
         error_str = error_str.encode('UTF-8') if _pyversion()==2 else error_str
         return error_str

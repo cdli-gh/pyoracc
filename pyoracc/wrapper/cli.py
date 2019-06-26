@@ -2,6 +2,7 @@ import os
 import time
 import codecs
 import click
+import re
 from multiprocessing import Pool
 from stat import ST_MODE, S_ISREG
 from pyoracc.wrapper.segment import Segmentor
@@ -11,6 +12,7 @@ from pyoracc.tools.errors_template import ErrorsTemplate
 from itertools import product
 log_tmp=LogTemplate()
 error_tmp=ErrorsTemplate()
+
 
 def output_error(error_list, summary, pathname, whole, summary_str,orig_map):
     if len(summary) > 0 and os.path.isdir(summary) and (not whole):
@@ -54,8 +56,15 @@ def check_atf_message(args):
     segpathname, atftype, verbose,skip = args
     if verbose:
         click.echo('\n Info: Parsing {0}.'.format(segpathname))
-    atf_id = (segpathname.split('/')[-1]).split('.')[0]# extract atf_id(e.g. P136211) 
-    errors= check_atf(segpathname, atftype, verbose,skip,atf_id)
+    
+    atf_id = 'P'+re.sub(r'\D','',segpathname.split('/')[-1])#(segpathname.split('/')[-1]).split('.')[0]# extract atf_id(e.g. P136211)
+    # print(segpathname)
+    # print(segpathname.split('/')[-1])
+    # if len(atf_id)<4:
+    #     print('S',atf_id)
+    errors = check_atf(segpathname, atftype, verbose,skip,atf_id)
+    # if len(atf_id)<4:
+    #     print('E',atf_id)
     return (errors,atf_id,segpathname)
 
 
@@ -69,7 +78,7 @@ def check_and_process(pathname,summary,atftype, whole, verbose=False):
         try:
             segmentor = Segmentor(pathname, verbose)
             if not whole:
-                pool = Pool(processes=6)
+                pool = Pool()#processes=2
                 outfolder = segmentor.convert()
                 if verbose:
                     click.echo('Info: Segmented into {0}.'.format(outfolder))
@@ -84,6 +93,7 @@ def check_and_process(pathname,summary,atftype, whole, verbose=False):
             else:
                 error_list = [check_atf_message((pathname, atftype, verbose,(not whole)))] # get error list
             num_error = 0
+            print('finish parsing')
             for error in error_list:
                 num_error += len(error[0])
             summary_str = log_tmp.summary_num(num_error,pathname)

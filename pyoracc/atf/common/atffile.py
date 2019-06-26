@@ -53,6 +53,7 @@ class AtfFile(object):
             content += "\n"
         if atftype == 'cdli':
             atfparser=AtfCDLIParser(debug=debug,skip=skip,log=log,g_check=g_check)
+            
             atflexer=AtfCDLILexer(debug=debug, skip=skip,log=log,g_check=g_check)
         elif atftype == 'oracc':
             atfparser=AtfOraccParser(debug=debug, skip=skip,log=log,g_check=g_check) 
@@ -60,15 +61,13 @@ class AtfFile(object):
         else:
             atfparser=AtfParser(debug=debug, skip=skip,log=log,g_check=g_check) 
             atflexer=AtfLexer(debug=debug, skip=skip,log=log,g_check=g_check)
+        
         lexer = atflexer.lexer
         parser = atfparser.parser
-        # self.errors_lex=atflexer.errors 
-        # self.errors_yacc=atfparser.errors
         if debug:
             self.text = parser.parse(content, lexer=lexer, debug=log)
         else:
             self.text = parser.parse(content, lexer=lexer)
-        # atfparser.g_check.print_test()
         g_check.check()
         self.errors = g_check.errors
 

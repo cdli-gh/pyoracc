@@ -3,6 +3,7 @@ import click
 import os
 import sys
 import time
+import re
 
 
 ts = time.time()
@@ -55,7 +56,8 @@ class Segmentor:
             if len(self.lines) > 0:
                 self.write2file()
             self.__reset__()
-            firstword = tokenizedLine[0].lstrip("&")
+            # firstword = tokenizedLine[0].lstrip("&")
+            firstword = 'P'+ re.sub(r'\D','',tokenizedLine[0].strip())#tokenizedLine[0].lstrip("&")
             self.col_map[firstword]=linenumber
             self.outputFilename = firstword
         self.lines.append(line)

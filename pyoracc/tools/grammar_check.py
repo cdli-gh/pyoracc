@@ -64,20 +64,19 @@ More detail, may be add when more developments are added.
 
 
 import re
-from pyoracc.tools.errors_template import ErrorsTemplate
+from pyoracc.tools.content_extracter import ContentExtracter
+from pyoracc.tools.signword_processor import SignWordProcessor
 
-et=ErrorsTemplate()
 
 class GrammarCheck(object):
+    sw_processor = SignWordProcessor()
     def __init__(self,orig_input,atf_id):
+        self.orig_input = orig_input.strip()
+        
         self.errors = []  #error list {err_id:int, line:intlist, colmun:intlist, tocken:str}, since it is a dict, it is easy to extend 
         self.errors_yacc = [] #error list {error_id:int, line:intlist, colmun:intlist, tocken:str}
         self.errors_lex = []
-
-        self.orig_input = orig_input.strip()
-        
         self.errors_line_set=set()
-
         self.ids = [] # id lines, e.g. &P123456 = AB 78, 910
         self.lans = [] # language lines, e.g. #atf: lang akk 
         self.objs = [] # objects lines, e.g. @tablet
@@ -86,8 +85,18 @@ class GrammarCheck(object):
         self.dollars = [] # $ comment lines, e.g. $ blank space 
         self.links = [] # >>
         self.sharp_comments= [] # #-comment  
-
         self.atf_id=atf_id
+        self.word_list, self.sign_list =  self.init_content()
+        
+
+    def init_content(self):
+        objExtract = ContentExtracter()
+        
+        seg_input = self.orig_input.split('\n')
+        objExtract.CreateTokens(seg_input)
+        tokens,signs=objExtract.ReturnTokens()
+        return tokens, signs
+
     ''' strating test section '''
 
     # def print_test(self):
@@ -103,8 +112,10 @@ class GrammarCheck(object):
     #     print(self.surfaces)
     #     print(self.trans)
     #     print(self.dollars)
-    #     for i in self.errors:
-    #         print(et.error2str(0,i))
+    #     # for i in self.errors:
+    #     #     print(et.error2str(0,i))
+    #     print(self.tocken_list)
+    #     print(self.sign_list)
     #     # print(self.orig_input.split('\n'))
     #     print('----GrammarCheck)----')
     
@@ -606,6 +617,117 @@ class GrammarCheck(object):
     
     ''' ending line check section '''
 
+    ''' starting sign&word level check section '''
+
+    def find_sign_word_line(self,unit):
+        '''
+        :params unit: str, a sign or a word 
+        :return: list (int), a list of line
+
+        search unit(sign or word) in the whole text, and find the line. 
+        '''
+        tmp_lines = []
+        seg_input = self.orig_input.split('\n')
+        for i in range(len(seg_input)-1):
+            search_flag = seg_input[i].find(unit)
+            if search_flag!=-1:
+                tmp_lines.append(i+1)
+                self.errors_line_set.add(i+1)
+        return tmp_lines            
+
+
+    def valid_pid_check(self):
+        '''
+        :params: N/A
+        :return: int, period id
+
+        error ID: 25, 26, 29, 30, 31
+        get the pid according to atfid. 
+        '''
+        atfid_num = self.atf_id.replace('P','')#re.sub(r'\D','',self.atf_id)
+        if len(atfid_num)<=0:
+            tmp_err={'err_id':31}
+            self.errors.append(tmp_err)
+            return -4           
+        # print(atfid_num)
+        atfid_num = str(int(atfid_num))
+        pid = GrammarCheck.sw_processor.get_pid(atfid_num)
+        if pid == -1:
+            tmp_err={'err_id':25}
+            self.errors.append(tmp_err)
+        elif pid == -2:
+            tmp_err={'err_id':26}
+            self.errors.append(tmp_err)
+        else:
+            tmp_flag1 = GrammarCheck.sw_processor.is_pid_in_signlist(pid)
+            tmp_flag2 = GrammarCheck.sw_processor.is_pid_in_wordlist(pid)
+            if not tmp_flag1:
+                tmp_err={'err_id':29,'pid':pid}
+                self.errors.append(tmp_err)
+            if not tmp_flag2:
+                tmp_err={'err_id':30,'pid':pid}
+                self.errors.append(tmp_err)
+            pid = -3                
+
+        return pid    
+
+
+    def valid_words_check(self,pid):
+        '''
+        :params pid: int, period id
+        :return: N/A
+
+        error ID: 27
+        
+        '''
+        for word in self.word_list:
+            check_flag = GrammarCheck.sw_processor.check_word(pid,word)
+            
+            if not check_flag:
+                tmp_lines = self.find_sign_word_line(word)
+                if len(tmp_lines)>0:
+                    period = GrammarCheck.sw_processor.pid_to_text(pid)
+                    tmp_err={'err_id':27,'line':tmp_lines,'word':word,'period':period}
+                    self.errors.append(tmp_err)
+
+    def valid_signs_check(self,pid):
+        '''
+        :params pid: int, period id
+        :return: N/A
+
+        error ID: 28
+ 
+        '''
+        for sign in self.sign_list:
+            check_flag = GrammarCheck.sw_processor.check_sign(pid,sign)
+            if not check_flag:
+                tmp_lines = self.find_sign_word_line(sign)
+                if len(tmp_lines)>0:
+                    period = GrammarCheck.sw_processor.pid_to_text(pid)
+                    tmp_err={'err_id':28,'line':tmp_lines,'sign':sign,'period':period}
+                    self.errors.append(tmp_err)
+
+    def sign_word_level_check(self):
+        '''
+        :params N/A
+        :return: N/A
+
+        invoke all sign&word level checks
+        '''
+        pid = self.valid_pid_check()
+        
+        if int(pid) > 0:
+            self.valid_words_check(pid)
+            self.valid_signs_check(pid)
+        
+
+    
+    ''' ending sign&token level check section '''
+
+
+
+
+
     ''' starting structure check section '''
 
     def structure_IdLanObj_order_check(self):
@@ -801,6 +923,7 @@ class GrammarCheck(object):
         try:
             self.structure_check()
             self.line_check()
+            self.sign_word_level_check()
             ''''''
             self.lex_yacc_check() # must be done last
         except:

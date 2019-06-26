@@ -43,8 +43,7 @@ class AtfParser(object):
 
     def __init__(self, debug=0, skip=False, log=yacc.NullLogger(),g_check=None):
         self.skip=skip
-        self.parser = yacc.yacc(module=self, tabmodule='pyoracc.atf.parsetab',
-                                debug=debug, debuglog=log)
+        self.parser = yacc.yacc(module=self, tabmodule='pyoracc.atf.parsetab',debug=debug, debuglog=log)#
         self.log_tmp=LogTemplate()
         self.cur_pos=0
         self.g_check = g_check
