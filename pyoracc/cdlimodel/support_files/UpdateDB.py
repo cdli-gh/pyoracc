@@ -1,16 +1,16 @@
-import urllib2, urllib
+from __future__ import print_function
 import requests
 import re
 import sys
 
 def update(url):
     path='https://cdli.ucla.edu/atfchecker/'+url    #the url you want to POST to
-    req=urllib2.Request(path)
-    req.add_header("Content-type", "application/x-www-form-urlencoded")
-    page=urllib2.urlopen(req).read()
+    header={"Content-type": "application/x-www-form-urlencoded"}
+    fetch=requests.post(path,headers=header)
+    page=fetch.text
 
     if(page.find('Error:') != -1):
-        print "Update Failed.\nPlease contact CDLI."
+        print("Update Failed.\nPlease contact CDLI.")
         sys.exit()
 
     return page
@@ -36,4 +36,4 @@ if __name__ == "__main__":
     write_to_file('ValidQnumbers.txt', qnumber_string)
     write_to_file('PeriodMap.txt',update('update_periodmap.php'))
 
-    print "Support Content Updated"
+    print("Support Content Updated")

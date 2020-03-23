@@ -23,6 +23,7 @@ from setuptools.command.build_py import build_py
 # To use a consistent encoding
 from codecs import open
 from os import path
+import sys
 
 here = path.abspath(path.dirname(__file__))
 
@@ -30,7 +31,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-dependencies = ['click', 'mako', 'ply', 'multiprocessing']
+dependencies = ['click', 'mako', 'ply']
+
+if  sys.version_info[0]==2 and sys.version_info[1]<=5:
+    dependencies.append('multiprocessing');
+        
 
 extra_dependencies = ['pytest', 'pytest-cov', 'codecov', 'pycodestyle']
 
