@@ -34,9 +34,6 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 dependencies = ['click', 'mako', 'ply']
 
-if  sys.version_info[0] == 2 and sys.version_info[1] <= 5:
-    dependencies.append('multiprocessing');        
-
 extra_dependencies = ['pytest', 'pytest-cov', 'codecov', 'pycodestyle']
 
 
