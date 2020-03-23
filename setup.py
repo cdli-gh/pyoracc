@@ -18,6 +18,7 @@ along with PyORACC. If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from setuptools import find_packages, setup
+from setuptools import setup
 from setuptools.command.build_py import build_py
 
 # To use a consistent encoding
@@ -33,9 +34,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 dependencies = ['click', 'mako', 'ply']
 
-if  sys.version_info[0]==2 and sys.version_info[1]<=5:
-    dependencies.append('multiprocessing');
-        
+if  sys.version_info[0] == 2 and sys.version_info[1] <= 5:
+    dependencies.append('multiprocessing');        
 
 extra_dependencies = ['pytest', 'pytest-cov', 'codecov', 'pycodestyle']
 
