@@ -15,8 +15,10 @@ ${child.serialize()}
 
     def __init__(self):
         # CDLI Parameters
-        self.ValidPnumbersfilepath = pkg_resources.resource_filename(__name__, 'support_files/ValidPnumbers.txt')
-        self.PnumberMapfilepath = pkg_resources.resource_filename(__name__, 'support_files/PnumberMap.txt')
+        self.ValidPnumbersfilepath = pkg_resources.resource_filename(
+            __name__, 'support_files/ValidPnumbers.txt')
+        self.PnumberMapfilepath = pkg_resources.resource_filename(
+            __name__, 'support_files/PnumberMap.txt')
         self.pList = None
         self.oldPlist = None
         self.newPlist = None
@@ -81,7 +83,8 @@ ${child.serialize()}
 
         if foundMap:
             index = self.oldPlist.index(pnumber)
-            temp = "Replace Old Pnumber : " + pnumber + " with New Pnumber : " + self.newPlist[index]
+            temp = "Replace Old Pnumber : " + pnumber + \
+                " with New Pnumber : " + self.newPlist[index]
             return self.newPlist[index], True, temp
         else:
             if self.CheckPnumber(pnumber):

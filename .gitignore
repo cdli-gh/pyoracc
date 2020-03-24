@@ -63,3 +63,7 @@ docs/_build/
 pyoracc/test/data/
 
 parselog.txt
+
+#testing scratchpad
+.eggs/
+*,cover
